@@ -1,0 +1,4 @@
+# Self created test instance - Dewitte
+2 4
+0 2 1 20 0 5 2 10
+0 1 1 20 0 6 3 20
