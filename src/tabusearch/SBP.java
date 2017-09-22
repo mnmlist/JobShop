@@ -30,11 +30,11 @@ public class SBP {
     private static Machine findBottleneck(Set<Machine> machines, Solution s) {
         Machine mbottleneck = null;
         LinkedList<Operation>[] e = s.getE();
-        Map<Machine, Integer> map = new HashMap<>();
+        Map<Machine, Integer> maplag = new HashMap<>();
+        Map<Machine, List<RPQ>> maprpq = new HashMap<>();
         for (Machine m : machines) {
             int lag = 0;
             int mid = m.getId();
-            int t = 0;
             List<RPQ> rpqs = new ArrayList<>();
             List<RPQ> rpqsed = new ArrayList<>();
             for (Operation o : e[mid]) {
@@ -43,28 +43,60 @@ public class SBP {
                 rpq.setP(o.getDuration());
   /*              rpq.setR();
                 rpq.setQ();*/
+                rpqs.add(rpq);
             }
+
+
+            int t = 0;
             while (rpqsed.size() < e[mid].size()) {
-                RPQ rpq = findRPQ(rpqs);
-                rpqsed.add(rpq);
-                rpqs.remove(rpq);
+                RPQ rpqmin = null;
+                int rmin = Integer.MAX_VALUE;
+                int pmin = Integer.MAX_VALUE;
+                for (RPQ rpq : rpqs) {
+                    if (t > rpq.getR()) {
+                        if (pmin > rpq.getP()) {
+                            pmin = rpq.getP();
+                            rmin = rpq.getR();
+                            rpqmin = rpq;
+                        }
+                    } else {
+                        if (rmin > rpq.getR()) {
+                            rmin = rpq.getR();
+                            rpqmin = rpq;
+                        }
+                    }
+                }
+                if (t < rpqmin.getR()) {
+                    t = rpqmin.getR() + rpqmin.getP();
+                } else {
+                    t = t + rpqmin.getP();
+                }
+                lag += Integer.max(t - rpqmin.getQ(), 0);
+                rpqsed.add(rpqmin);
+                rpqs.remove(rpqmin);
             }
-            map.put(m, lag);
+
+
+            maplag.put(m, lag);
+            maprpq.put(m, rpqsed);
         }
         int maxlag = 0;
-        for (Map.Entry<Machine, Integer> entry : map.entrySet()) {
+        for (Map.Entry<Machine, Integer> entry : maplag.entrySet()) {
             if (entry.getValue() > maxlag) {
                 maxlag = entry.getValue();
                 mbottleneck = entry.getKey();
             }
         }
+        for (RPQ rpq : maprpq.get(mbottleneck)) {
+            s.scheduleOperationLeft(rpq.getO());
+        }
         return mbottleneck;
     }
 
-    private static RPQ findRPQ(List<RPQ> rpqs) {
+/*    private static RPQ findRPQ(List<RPQ> rpqs) {
         RPQ rpq = new RPQ();
         return rpq;
-    }
+    }*/
 }
 
 class RPQ {
