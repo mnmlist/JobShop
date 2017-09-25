@@ -1,534 +1,579 @@
 package tabusearch;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * A class representation the solution of a JSS problem. A solution can be
  * interpreted as a problem with a schedule. The schedule and the problem will
  * also determine a longest path of our solution.
- * 
+ *
  * @author Thiebout Dewitte
  * @version 1.0
  */
 public class Solution extends Problem {
 
-	/*********************************
-	 * CONSTRUCTORS
-	 *********************************/
+    /*********************************
+     * CONSTRUCTORS
+     *********************************/
 
-	/**
-	 * Initialize a new solution with a given problem and given schedule.
-	 */
-	public Solution(Problem p, Operation[][] s) {
-		super(p.getV(), p.getA(), p.getE());
-		setLongestPath(new LinkedList<Operation>());
-		schedule = s;
-	}
+    /**
+     * Initialize a new solution with a given problem and given schedule.
+     */
+    public Solution(Problem p, Operation[][] s) {
+        super(p.getV(), p.getA(), p.getE());
+        setLongestPath(new LinkedList<Operation>());
+        initalSAndE();
+        schedule = s;
+    }
 
-	/**
-	 * Initialize a new solution with a given problem and an empty schedule.
-	 */
-	public Solution(Problem p) {
-		this(p, new Operation[p.getNumberOfMachines()][p
-				.getMaximumNumberOfOperationsOnMachine()]);
-	}
 
-	/*********************************
-	 * SOLUTION
-	 *********************************/
+    /**
+     * Initialize a new solution with a given problem and an empty schedule.
+     */
+    public Solution(Problem p) {
+        this(p, new Operation[p.getNumberOfMachines()][p
+                .getMaximumNumberOfOperationsOnMachine()]);
+    }
 
-	/**
-	 * Variable referencing the schedule.
-	 */
-	private final Operation[][] schedule;
+    /*********************************
+     * SOLUTION
+     *********************************/
 
-	/**
-	 * @return the schedule
-	 */
-	public Operation[][] getSchedule() {
-		return schedule;
-	}
+    /**
+     * Variable referencing the schedule.
+     */
+    private final Operation[][] schedule;
 
-	/**
-	 * Schedule an operation on the first free place, from the left. The
-	 * operation will be scheduled time increasing.
-	 * 
-	 * @param oToBeScheduled
-	 */
-	public void scheduleOperationLeft(Operation oToBeScheduled) {
-		int index = 0;
-		int machineId = oToBeScheduled.getMachine().getId();
+    /**
+     * @return the schedule
+     */
+    public Operation[][] getSchedule() {
+        return schedule;
+    }
 
-		boolean searchingNextFreePlace = true;
-		while (searchingNextFreePlace) {
-			if (getSchedule()[machineId][index] == null)
-				searchingNextFreePlace = false;
-			index++; // go to the right to find next free spot
-		}
+    /**
+     * Schedule an operation on the first free place, from the left. The
+     * operation will be scheduled time increasing.
+     *
+     * @param oToBeScheduled
+     */
+    public void scheduleOperationLeft(Operation oToBeScheduled) {
+        int index = 0;
+        int machineId = oToBeScheduled.getMachine().getId();
 
-		int dropIndex = index - 1;
-		getSchedule()[machineId][dropIndex] = oToBeScheduled;
-	}
+        boolean searchingNextFreePlace = true;
+        while (searchingNextFreePlace) {
+            if (getSchedule()[machineId][index] == null)
+                searchingNextFreePlace = false;
+            index++; // go to the right to find next free spot
+        }
 
-	/**
-	 * Schedule an operation on the first free place, from the right. The
-	 * operation will be scheduled time decreasing.
-	 * 
-	 * @param oToBeScheduled
-	 */
-	public void scheduleOperationRight(Operation oToBeScheduled) {
-		int index = schedule[0].length - 1; // schedule is squared matrix, this
-											// is the last position
-		int machineId = oToBeScheduled.getMachine().getId();
+        int dropIndex = index - 1;
+        getSchedule()[machineId][dropIndex] = oToBeScheduled;
+    }
 
-		boolean searchingNextFreePlace = true;
-		while (searchingNextFreePlace) {
-			if (getSchedule()[machineId][index] == null)
-				searchingNextFreePlace = false;
-			index--; // go to the left to find next free spot
-		}
+    /**
+     * Schedule an operation on the first free place, from the right. The
+     * operation will be scheduled time decreasing.
+     *
+     * @param oToBeScheduled
+     */
+    public void scheduleOperationRight(Operation oToBeScheduled) {
+        int index = schedule[0].length - 1; // schedule is squared matrix, this
+        // is the last position
+        int machineId = oToBeScheduled.getMachine().getId();
 
-		int dropIndex = index + 1;
-		getSchedule()[machineId][dropIndex] = oToBeScheduled;
-	}
+        boolean searchingNextFreePlace = true;
+        while (searchingNextFreePlace) {
+            if (getSchedule()[machineId][index] == null)
+                searchingNextFreePlace = false;
+            index--; // go to the left to find next free spot
+        }
 
-	/**
-	 * Clone a schedule.
-	 */
-	public Operation[][] cloneSchedule() {
-		Operation[][] schedule = new Operation[getNumberOfMachines()][getMaximumNumberOfOperationsOnMachine()];
-		for (int i = 0; i < getNumberOfMachines(); i++) {
-			for (int j = 0; j < getMaximumNumberOfOperationsOnMachine(); j++) {
-				schedule[i][j] = getSchedule()[i][j];
-			}
-		}
-		return schedule;
-	}
+        int dropIndex = index + 1;
+        getSchedule()[machineId][dropIndex] = oToBeScheduled;
+    }
 
-	/*********************************
-	 * COST FUNCTION
-	 *********************************/
+    /**
+     * Clone a schedule.
+     */
+    public Operation[][] cloneSchedule() {
+        Operation[][] schedule = new Operation[getNumberOfMachines()][getMaximumNumberOfOperationsOnMachine()];
+        for (int i = 0; i < getNumberOfMachines(); i++) {
+            for (int j = 0; j < getMaximumNumberOfOperationsOnMachine(); j++) {
+                schedule[i][j] = getSchedule()[i][j];
+            }
+        }
+        return schedule;
+    }
 
-	/**
-	 * Variable referencing the longest path of a solution (the sum of the nodes
-	 * on this path is the cost).
-	 */
-	private LinkedList<Operation> longestPath = new LinkedList<Operation>();
+    /*********************************
+     * COST FUNCTION
+     *********************************/
 
-	/**
-	 * @return the longestPath
-	 */
-	public LinkedList<Operation> getLongestPath() {
-		return longestPath;
-	}
+    /**
+     * Variable referencing the longest path of a solution (the sum of the nodes
+     * on this path is the cost).
+     */
+    private LinkedList<Operation> longestPath = new LinkedList<Operation>();
 
-	/**
-	 * @param longestPath
-	 *            the longestPath to set
-	 */
-	private void setLongestPath(LinkedList<Operation> longestPath) {
-		this.longestPath = longestPath;
-	}
+    /**
+     * @return the longestPath
+     */
+    public LinkedList<Operation> getLongestPath() {
+        return longestPath;
+    }
 
-	/**
-	 * Get the cost of the solution.
-	 */
-	public float getCost() {
-		float[][] longestPath = calculateLongestPath();
-		return longestPath[longestPath.length - 1][0];
-	}
+    /**
+     * @param longestPath the longestPath to set
+     */
+    private void setLongestPath(LinkedList<Operation> longestPath) {
+        this.longestPath = longestPath;
+    }
 
-	/**
-	 * Get the adjacency list representation of the JSS problem.
-	 */
-	public HashMap<Operation, Float>[] getAdjacencyListRepresentation() {
-		@SuppressWarnings("unchecked")
-		HashMap<Operation, Float>[] adj = new HashMap[getNumberOfOperations()];
-		for (int i = 0; i < adj.length; ++i)
-			adj[i] = new HashMap<Operation, Float>();
+    /**
+     * Get the cost of the solution.
+     */
+    public float getCost() {
+        float[][] longestPath = calculateLongestPath();
+        return longestPath[longestPath.length - 1][0];
+    }
 
-		// fill hashmap with initial and final operations
-		for (LinkedList<Operation> list : getA()) {
-			adj[0].put(list.getFirst(),
-					(float) list.getFirst().getDuration() / 2);
-			adj[list.getLast().getId()].put(new Operation(0, null, null,
-					getNumberOfOperations() - 1), (float) list.getLast()
-					.getDuration() / 2);
-		}
+    /**
+     * Get the adjacency list representation of the JSS problem.
+     */
+    public HashMap<Operation, Float>[] getAdjacencyListRepresentation() {
+        @SuppressWarnings("unchecked")
+        HashMap<Operation, Float>[] adj = new HashMap[getNumberOfOperations()];
+        for (int i = 0; i < adj.length; ++i)
+            adj[i] = new HashMap<Operation, Float>();
 
-		// Add successor of each operation to the adjacency representation
-		for (Operation o : getV()) {
-			if (o.getMachine() != null && o.getJob() != null
-					&& getSJOfOperation(o) != null) { // don't handle
-														// source and
-														// sink again
-				adj[o.getId()].put(getSJOfOperation(o),
-						(float) getSJOfOperation(o).getDuration() / 2
-								+ (float) o.getDuration() / 2);
-			}
-		}
+        // fill hashmap with initial and final operations
+        for (LinkedList<Operation> list : getA()) {
+            adj[0].put(list.getFirst(),
+                    (float) list.getFirst().getDuration() / 2);
+            adj[list.getLast().getId()].put(new Operation(0, null, null,
+                    getNumberOfOperations() - 1), (float) list.getLast()
+                    .getDuration() / 2);
+        }
 
-		// iterate through edges showing precedence on machine i
-		for (int i = 0; i < getSchedule().length; i++) {
-			for (int j = 0; j < getSchedule()[i].length - 1; j++) {
-				if (getSchedule()[i][j + 1] != null)
-					adj[getSchedule()[i][j].getId()].put(
-							getSchedule()[i][j + 1],
-							(float) getSchedule()[i][j].getDuration()
-									/ 2
-									+ (float) getSchedule()[i][j + 1]
-											.getDuration() / 2);
-			}
-		}
+        // Add successor of each operation to the adjacency representation
+        for (Operation o : getV()) {
+            if (o.getMachine() != null && o.getJob() != null
+                    && getSJOfOperation(o) != null) { // don't handle
+                // source and
+                // sink again
+                adj[o.getId()].put(getSJOfOperation(o),
+                        (float) getSJOfOperation(o).getDuration() / 2
+                                + (float) o.getDuration() / 2);
+            }
+        }
 
-		return adj;
-	}
+        // iterate through edges showing precedence on machine i
+        for (int i = 0; i < getSchedule().length; i++) {
+            for (int j = 0; j < getSchedule()[i].length - 1; j++) {
+                if (getSchedule()[i][j + 1] != null)
+                    adj[getSchedule()[i][j].getId()].put(
+                            getSchedule()[i][j + 1],
+                            (float) getSchedule()[i][j].getDuration()
+                                    / 2
+                                    + (float) getSchedule()[i][j + 1]
+                                    .getDuration() / 2);
+            }
+        }
 
-	/**
-	 * Help method used by topologicalSort().
-	 */
-	private void topologicalSortUtil(Operation o, Boolean visited[],
-			Stack<Operation> stack) {
-		// Mark the current node as visited.
-		visited[o.getId()] = true;
-		Operation i;
+        return adj;
+    }
 
-		// Recur for all the vertices adjacent to this vertex
-		Iterator<Operation> it = getAdjacencyListRepresentation()[o.getId()]
-				.keySet().iterator();
-		while (it.hasNext()) {
-			i = it.next();
-			if (!visited[i.getId()])
-				topologicalSortUtil(i, visited, stack);
-		}
+    /**
+     * Help method used by topologicalSort().
+     */
+    private void topologicalSortUtil(Operation o, Boolean visited[],
+                                     Stack<Operation> stack) {
+        // Mark the current node as visited.
+        visited[o.getId()] = true;
+        Operation i;
 
-		// Push current vertex to stack which stores result
-		stack.push(o);
-	}
+        // Recur for all the vertices adjacent to this vertex
+        Iterator<Operation> it = getAdjacencyListRepresentation()[o.getId()]
+                .keySet().iterator();
+        while (it.hasNext()) {
+            i = it.next();
+            if (!visited[i.getId()])
+                topologicalSortUtil(i, visited, stack);
+        }
 
-	/**
-	 * Topological sorting for Directed Acyclic Graph (DAG) is a linear ordering
-	 * of vertices such that for every directed edge uv, vertex u comes before v
-	 * in the ordering.
-	 */
-	private Stack<Operation> topologicalSort() {
-		Stack<Operation> stack = new Stack<Operation>();
+        // Push current vertex to stack which stores result
+        stack.push(o);
+    }
 
-		// Mark all the vertices as not visited
-		Boolean visited[] = new Boolean[getNumberOfOperations()];
-		for (int i = 0; i < getNumberOfOperations(); i++)
-			visited[i] = false;
+    /**
+     * Topological sorting for Directed Acyclic Graph (DAG) is a linear ordering
+     * of vertices such that for every directed edge uv, vertex u comes before v
+     * in the ordering.
+     */
+    private Stack<Operation> topologicalSort() {
+        Stack<Operation> stack = new Stack<Operation>();
 
-		// Call the recursive helper function to store Topological
-		// Sort starting from all vertices one by one
-		for (int i = 0; i < getNumberOfOperations(); i++)
-			if (!visited[i])
-				topologicalSortUtil(getV().get(i), visited, stack);
+        // Mark all the vertices as not visited
+        Boolean visited[] = new Boolean[getNumberOfOperations()];
+        for (int i = 0; i < getNumberOfOperations(); i++)
+            visited[i] = false;
 
-		return stack;
-	}
+        // Call the recursive helper function to store Topological
+        // Sort starting from all vertices one by one
+        for (int i = 0; i < getNumberOfOperations(); i++)
+            if (!visited[i])
+                topologicalSortUtil(getV().get(i), visited, stack);
 
-	/**
-	 * Calculate the longest path will set the longest path, to a longest path
-	 * found in the graph. It will return the value of this longest path.
-	 * 
-	 * @return
-	 */
-	private float[][] calculateLongestPath() {
-		Stack<Operation> stack = topologicalSort();
+        return stack;
+    }
 
-		// Set all labels to "-Inf" (min value of an integer)
-		Label[] label = new Label[getNumberOfOperations()];
-		for (int i = 0; i < getNumberOfOperations(); i++) {
-			label[i] = new Label();
-			label[i].setDistance(Integer.MIN_VALUE);
-		}
+    /**
+     * Calculate the longest path will set the longest path, to a longest path
+     * found in the graph. It will return the value of this longest path.
+     *
+     * @return
+     */
+    private float[][] calculateLongestPath() {
+        Stack<Operation> stack = topologicalSort();
 
-		label[0].setDistance(0); // begin searching the longest path from source
+        // Set all labels to "-Inf" (min value of an integer)
+        Label[] label = new Label[getNumberOfOperations()];
+        for (int i = 0; i < getNumberOfOperations(); i++) {
+            label[i] = new Label();
+            label[i].setDistance(Integer.MIN_VALUE);
+        }
 
-		// Process all operations in topological order
-		Operation o = null;
-		while (!stack.empty()) {
-			// Get the next operation
-			o = stack.peek();
-			stack.pop();
+        label[0].setDistance(0); // begin searching the longest path from source
 
-			// Update labels
-			if (label[o.getId()].getDistance() != Integer.MIN_VALUE) {
-				HashMap<Operation, Float>[] adjacencyList = getAdjacencyListRepresentation();
-				for (Operation adjOp : adjacencyList[o.getId()].keySet()) {
-					if (label[adjOp.getId()].getDistance() < label[o.getId()]
-							.getDistance()
-							+ (float) adjOp.getDuration()
-							/ 2
-							+ (float) o.getDuration() / 2) {
-						label[adjOp.getId()].setDistance(label[o.getId()]
-								.getDistance()
-								+ (float) adjOp.getDuration()
-								/ 2 + (float) o.getDuration() / 2);
-						label[adjOp.getId()].setOperation(o);
-					}
-				}
-			}
-		}
+        // Process all operations in topological order
+        Operation o = null;
+        while (!stack.empty()) {
+            // Get the next operation
+            o = stack.peek();
+            stack.pop();
 
-		// Make sure that the longest path is first empty
-		setLongestPath(new LinkedList<Operation>());
+            // Update labels
+            if (label[o.getId()].getDistance() != Integer.MIN_VALUE) {
+                HashMap<Operation, Float>[] adjacencyList = getAdjacencyListRepresentation();
+                for (Operation adjOp : adjacencyList[o.getId()].keySet()) {
+                    if (label[adjOp.getId()].getDistance() < label[o.getId()]
+                            .getDistance()
+                            + (float) adjOp.getDuration()
+                            / 2
+                            + (float) o.getDuration() / 2) {
+                        label[adjOp.getId()].setDistance(label[o.getId()]
+                                .getDistance()
+                                + (float) adjOp.getDuration()
+                                / 2 + (float) o.getDuration() / 2);
+                        label[adjOp.getId()].setOperation(o);
+                    }
+                }
+            }
+        }
 
-		// Build the path itself using our labels (operations), starting from
-		// the sink
-		getLongestPath().addFirst(new Operation(0, null, null, label.length));
-		Operation prev = label[label.length - 1].getOperation();
-		while (prev != null) {
-			getLongestPath().addFirst(prev);
-			prev = label[prev.getId()].getOperation();
-		}
+        // Make sure that the longest path is first empty
+        setLongestPath(new LinkedList<Operation>());
 
-		// Construct solution as in example Dropbox
-		float[][] sol = new float[getNumberOfJobs() + 1][getMaximumNumberOfOperationsOnJob()];
-		int id = 1;
-		for (int row = 0; row < getNumberOfJobs(); row++) {
-			for (int column = 0; column < getMaximumNumberOfOperationsOnJob(); column++) {
-				float earliestStartingTime = 0;
-				Operation vorige = label[id].getOperation();
-				while (vorige != null) {
-					earliestStartingTime += vorige.getDuration();
-					vorige = label[vorige.getId()].getOperation();
-				}
-				sol[row][column] = earliestStartingTime;
-				id++;
-			}
-		}
+        // Build the path itself using our labels (operations), starting from
+        // the sink
+        getLongestPath().addFirst(new Operation(0, null, null, label.length));
+        Operation prev = label[label.length - 1].getOperation();
+        while (prev != null) {
+            getLongestPath().addFirst(prev);
+            prev = label[prev.getId()].getOperation();
+        }
 
-		// Add additional row with longest path length
-		sol[getNumberOfJobs()][0] = label[getNumberOfOperations() - 1]
-				.getDistance();
-		this.sol = sol;
-		return sol;
-	}
+        // Construct solution as in example Dropbox
+        float[][] sol = new float[getNumberOfJobs() + 1][getMaximumNumberOfOperationsOnJob()];
+        int id = 1;
+        for (int row = 0; row < getNumberOfJobs(); row++) {
+            for (int column = 0; column < getMaximumNumberOfOperationsOnJob(); column++) {
+                float earliestStartingTime = 0;
+                Operation vorige = label[id].getOperation();
+                while (vorige != null) {
+                    earliestStartingTime += vorige.getDuration();
+                    vorige = label[vorige.getId()].getOperation();
+                }
+                sol[row][column] = earliestStartingTime;
+                id++;
+            }
+        }
 
-	/**
-	 * Make a clone of an ArrayList with operations.
-	 */
-	public static ArrayList<Operation> cloneList(ArrayList<Operation> list) {
-		ArrayList<Operation> clone = new ArrayList<Operation>(list.size());
-		for (Operation o : list)
-			clone.add(o);
-		return clone;
-	}
+        // Add additional row with longest path length
+        sol[getNumberOfJobs()][0] = label[getNumberOfOperations() - 1]
+                .getDistance();
+        this.sol = sol;
+        return sol;
+    }
 
-	/*********************************
-	 * VISUAL REPRESENTATION
-	 *********************************/
+    /**
+     * Make a clone of an ArrayList with operations.
+     */
+    public static ArrayList<Operation> cloneList(ArrayList<Operation> list) {
+        ArrayList<Operation> clone = new ArrayList<Operation>(list.size());
+        for (Operation o : list)
+            clone.add(o);
+        return clone;
+    }
 
-	/**
-	 * Get a string representation of the schedule of the solution.
-	 */
-	@Override
-	public String toString() {
-		String res = "****** Schedule: ******";
-		for (int i = 0; i < getSchedule().length; i++) {
-			res += "\n";
-			for (int j = 0; j < getSchedule()[i].length; j++) {
-				res += getSchedule()[i][j] + ", ";
-			}
-		}
-		res += "\ncost: " + getCost();
-		res += "\n" + getLongestPath();
-		return res + "\n****** ******";
-	}
+    /*********************************
+     * VISUAL REPRESENTATION
+     *********************************/
 
-	/**
-	 * Get a string representation of the schedule of the solution.
-	 */
-	public String toStringDetailed() {
-		String res = super.toString() + "\n";
-		res += toString();
-		return res;
-	}
+    /**
+     * Get a string representation of the schedule of the solution.
+     */
+    @Override
+    public String toString() {
+        String res = "****** Schedule: ******";
+        for (int i = 0; i < getSchedule().length; i++) {
+            res += "\n";
+            for (int j = 0; j < getSchedule()[i].length; j++) {
+                res += getSchedule()[i][j] + ", ";
+            }
+        }
+        res += "\ncost: " + getCost();
+        res += "\n" + getLongestPath();
+        return res + "\n****** ******";
+    }
 
-	/**
-	 * Print the solution in a form, such that it can be verified by the given
-	 * program jss.jar.
-	 */
-	public String printSolution() {
-		String res = "";
-		res += getNumberOfJobs() + " ";
-		res += getNumberOfMachines() + "\n";
-		float[][] sol = calculateLongestPath();
+    /**
+     * Get a string representation of the schedule of the solution.
+     */
+    public String toStringDetailed() {
+        String res = super.toString() + "\n";
+        res += toString();
+        return res;
+    }
 
-		for (int i = 0; i < sol.length - 1; i++) {
-			for (int j = 0; j < sol[i].length; j++) {
-				res += (Math.round(sol[i][j]) + " ");
-			}
-			res += "\n";
-		}
-		res += Math.round(sol[sol.length - 1][0]);
-		return res;
-	}
+    /**
+     * Print the solution in a form, such that it can be verified by the given
+     * program jss.jar.
+     */
+    public String printSolution() {
+        String res = "";
+        res += getNumberOfJobs() + " ";
+        res += getNumberOfMachines() + "\n";
+        float[][] sol = calculateLongestPath();
 
-	/**
-	 * Get the possible inversions (type N1) of a solution. In this case we
-	 * consider inversions of (i,j), where i and j are successive operations
-	 * processed on the same machine and they are on a longest path.
-	 */
-	public HashSet<Move> getPossibleInversionsN1() {
-		HashSet<Move> inversions = new HashSet<Move>();
-		LinkedList<Operation> longestPath = getLongestPath();
+        for (int i = 0; i < sol.length - 1; i++) {
+            for (int j = 0; j < sol[i].length; j++) {
+                res += (Math.round(sol[i][j]) + " ");
+            }
+            res += "\n";
+        }
+        res += Math.round(sol[sol.length - 1][0]);
+        return res;
+    }
 
-		// Iterate through critical path to find possible inversions
-		Operation prev = null;
-		for (Operation o : longestPath) {
-			if (prev != null && prev.getMachine() != null
-					& o.getMachine() != null) {
-				if (prev.getMachine().getId() == o.getMachine().getId())
-					inversions.add(new Move(prev, o)); // consider inversion of
-														// (prev,o)
-			}
-			prev = o;
-		}
+    /**
+     * Get the possible inversions (type N1) of a solution. In this case we
+     * consider inversions of (i,j), where i and j are successive operations
+     * processed on the same machine and they are on a longest path.
+     */
+    public HashSet<Move> getPossibleInversionsN1() {
+        HashSet<Move> inversions = new HashSet<Move>();
+        LinkedList<Operation> longestPath = getLongestPath();
 
-		return inversions;
-	}
+        // Iterate through critical path to find possible inversions
+        Operation prev = null;
+        for (Operation o : longestPath) {
+            if (prev != null && prev.getMachine() != null
+                    & o.getMachine() != null) {
+                if (prev.getMachine().getId() == o.getMachine().getId())
+                    inversions.add(new Move(prev, o)); // consider inversion of
+                // (prev,o)
+            }
+            prev = o;
+        }
 
-	/**
-	 * Get the possible inversions (type NA) of a solution. In this case we
-	 * consider all permutations of {PM[i],i,j} and {i,j,SM[j]} in which arc
-	 * (i,j) is inverted. This will be inversions of type N1 with some
-	 * additional inversions. Note that (i,j) should be successive operations,
-	 * processed on the same machine on a longest path. PM[i] and SM[j] should
-	 * also be on this longest path if they are reversed as well.
-	 */
-	public HashSet<Move> getPossibleInversionsNA() {
-		// NA is extension of N1. It will consider all inversions of N1,
-		// and some additional ones.
-		HashSet<Move> inversionsN1 = getPossibleInversionsN1();
-		HashSet<Move> inversionsNA = new HashSet<Move>();
-		LinkedList<Operation> longestPath = getLongestPath();
+        return inversions;
+    }
 
-		for (Move mN1 : inversionsN1) {
-			inversionsNA.add(mN1);
+    /**
+     * Get the possible inversions (type NA) of a solution. In this case we
+     * consider all permutations of {PM[i],i,j} and {i,j,SM[j]} in which arc
+     * (i,j) is inverted. This will be inversions of type N1 with some
+     * additional inversions. Note that (i,j) should be successive operations,
+     * processed on the same machine on a longest path. PM[i] and SM[j] should
+     * also be on this longest path if they are reversed as well.
+     */
+    public HashSet<Move> getPossibleInversionsNA() {
+        // NA is extension of N1. It will consider all inversions of N1,
+        // and some additional ones.
+        HashSet<Move> inversionsN1 = getPossibleInversionsN1();
+        HashSet<Move> inversionsNA = new HashSet<Move>();
+        LinkedList<Operation> longestPath = getLongestPath();
 
-			Operation u = mN1.getInversion().get(0);
-			Operation v = mN1.getInversion().get(1);
-			Operation PMu = getPMOfOperation(u);
-			Operation SMv = getSMOfOperation(v);
-			Operation PMPMu = getPMOfOperation(PMu);
-			Operation SMSMv = getSMOfOperation(SMv);
+        for (Move mN1 : inversionsN1) {
+            inversionsNA.add(mN1);
 
-			if (PMu != null) {
-				if (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-						PMu, u, longestPath)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								v, SMv, longestPath) || SMv == null)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								PMPMu, PMu, longestPath) || PMPMu == null)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								v, PMPMu, longestPath) || PMPMu == null)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								SMv, PMu, longestPath) || SMv == null)) {
-					inversionsNA.add(new Move(PMu, u, v));
-				}
+            Operation u = mN1.getInversion().get(0);
+            Operation v = mN1.getInversion().get(1);
+            Operation PMu = getPMOfOperation(u);
+            Operation SMv = getSMOfOperation(v);
+            Operation PMPMu = getPMOfOperation(PMu);
+            Operation SMSMv = getSMOfOperation(SMv);
 
-			}
+            if (PMu != null) {
+                if (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        PMu, u, longestPath)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        v, SMv, longestPath) || SMv == null)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        PMPMu, PMu, longestPath) || PMPMu == null)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        v, PMPMu, longestPath) || PMPMu == null)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        SMv, PMu, longestPath) || SMv == null)) {
+                    inversionsNA.add(new Move(PMu, u, v));
+                }
 
-			if (SMv != null) {
-				if (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-						v, SMv, longestPath)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								PMu, u, longestPath) || PMu == null)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								SMv, SMSMv, longestPath) || SMSMv == null)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								v, PMu, longestPath) || PMu == null)
-						&& (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-								SMSMv, u, longestPath) || SMSMv == null)) {
-					inversionsNA.add(new Move(u, v, SMv));
-				}
-			}
+            }
 
-		}
-		return inversionsNA;
-	}
+            if (SMv != null) {
+                if (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        v, SMv, longestPath)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        PMu, u, longestPath) || PMu == null)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        SMv, SMSMv, longestPath) || SMSMv == null)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        v, PMu, longestPath) || PMu == null)
+                        && (firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+                        SMSMv, u, longestPath) || SMSMv == null)) {
+                    inversionsNA.add(new Move(u, v, SMv));
+                }
+            }
 
-	/**
-	 * Check if a given operation (uP), immediately precedes the given operation
-	 * (u) on the given longest path (longestPath).
-	 */
-	private static boolean firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
-			Operation uP, Operation u, LinkedList<Operation> longestPath) {
-		try {
-			int i = 0;
-			for (i = 0; i < longestPath.size(); i++) {
-				if (longestPath.get(i).equals(uP)) {
-					break;
-				}
-			}
-			return u.equals(longestPath.get(i + 1));
-		} catch (Exception e) {
-			return false;
-		}
-	}
+        }
+        return inversionsNA;
+    }
 
-	/**
-	 * Get the immediate successor of an operation on its machine.
-	 * 
-	 * Please note that this method will return a null value, if the immediate
-	 * predecessor does not exist.
-	 */
-	public Operation getPMOfOperation(Operation i) {
-		try {
-			Operation[] operations = getSchedule()[i.getMachine().getId()];
-			Operation prev = null;
-			for (int k = 0; k < operations.length; k++) {
-				if (operations[k].equals(i))
-					return prev;
-				prev = operations[k];
-			}
-			return null;
-		} catch (Exception e) {
-			return null;
-		}
-	}
+    /**
+     * Check if a given operation (uP), immediately precedes the given operation
+     * (u) on the given longest path (longestPath).
+     */
+    private static boolean firstOperationImmediatelyPrecedesSecondOperationOnLongestPath(
+            Operation uP, Operation u, LinkedList<Operation> longestPath) {
+        try {
+            int i = 0;
+            for (i = 0; i < longestPath.size(); i++) {
+                if (longestPath.get(i).equals(uP)) {
+                    break;
+                }
+            }
+            return u.equals(longestPath.get(i + 1));
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
-	/**
-	 * Get the immediate predecessor of an operation on its machine.
-	 *
-	 * Please note that this method will return a null value, if the immediate
-	 * successor does not exist.
-	 */
-	public Operation getSMOfOperation(Operation i) {
-		try {
-			Operation[] operations = getSchedule()[i.getMachine().getId()];
-			for (int k = 0; k < operations.length; k++) {
-				if (operations[k].equals(i)) {
-					return operations[k + 1];
-				}
-			}
-			return null;
-		} catch (Exception e) {
-			return null;
-		}
-	}
-	private float[][] sol;
-	public float[][] getSol() {
-		return sol;
-	}
-	public void printSol() {
-		String res = "****** gantt: ******";
-		for (int i = 0; i < getSol().length-1; i++) {
+    /**
+     * Get the immediate successor of an operation on its machine.
+     * <p>
+     * Please note that this method will return a null value, if the immediate
+     * predecessor does not exist.
+     */
+    public Operation getPMOfOperation(Operation i) {
+        try {
+            Operation[] operations = getSchedule()[i.getMachine().getId()];
+            Operation prev = null;
+            for (int k = 0; k < operations.length; k++) {
+                if (operations[k].equals(i))
+                    return prev;
+                prev = operations[k];
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-			res += "\n";
-			res += ("Job " + i + ":");
-			for (int j = 0; j < getSol()[i].length; j++) {
-				res += ("M"+j+"("+getSol()[i][j]+")"+ ", ");
-			}
-		}
-		System.out.println(res);
-	}
+    /**
+     * Get the immediate predecessor of an operation on its machine.
+     * <p>
+     * Please note that this method will return a null value, if the immediate
+     * successor does not exist.
+     */
+    public Operation getSMOfOperation(Operation i) {
+        try {
+            Operation[] operations = getSchedule()[i.getMachine().getId()];
+            for (int k = 0; k < operations.length; k++) {
+                if (operations[k].equals(i)) {
+                    return operations[k + 1];
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private float[][] sol;
+
+    public float[][] getSol() {
+        return sol;
+    }
+
+    public void printSol() {
+        String res = "****** gantt: ******";
+        for (int i = 0; i < getSol().length - 1; i++) {
+
+            res += "\n";
+            res += ("Job " + i + ":");
+            for (int j = 0; j < getSol()[i].length; j++) {
+                res += ("M" + j + "(" + getSol()[i][j] + ")" + ", ");
+            }
+        }
+        System.out.println(res);
+    }
+
+    private int SBP_MAXSPAN;
+
+    private void initalSAndE() {
+        LinkedList<Operation>[] a = this.getA();
+        int SBP_MAXSPAN = 0;
+        for (int i = 0; i < a.length; i++) {
+            int maxi = 0;
+            for (int j = 0; j < a[i].size(); j++) {
+                maxi += a[i].get(j).getDuration();
+            }
+            if (SBP_MAXSPAN < maxi) {
+                SBP_MAXSPAN = maxi;
+            }
+        }
+        for (int i = 0; i < a.length; i++) {
+            for (int j = 0; j < a[i].size(); j++) {
+                Operation o = a[i].get(j);
+                Operation o_ = a[i].get(a[i].size() - 1 - j);
+                if (j == 0) {
+                    o.setStart(0);
+                    o_.setEnd(SBP_MAXSPAN);
+                } else {
+                    Operation oprev = a[i].get(j - 1);
+                    o.setStart(oprev.getStart() + oprev.getDuration());
+                    Operation o_suc = a[i].get(a[i].size() - j);
+                    o_.setEnd(o_suc.getEnd() - o_suc.getDuration());
+                }
+            }
+        }
+    }
+
+    public void scheduleOneMachine(List<Operation> os, int lag) {
+        SBP_MAXSPAN += lag;
+        for (int i = 0; i < os.size(); i++) {
+            scheduleOperationLeft(os.get(i));
+        }
+        for (int i = 0; i < os.size(); i++) {
+            if(i == 0){
+              //TODO
+
+
+            }
+        }
+    }
+
 }

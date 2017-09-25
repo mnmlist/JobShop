@@ -31,54 +31,47 @@ public class SBP {
         Machine mbottleneck = null;
         LinkedList<Operation>[] e = s.getE();
         Map<Machine, Integer> maplag = new HashMap<>();
-        Map<Machine, List<RPQ>> maprpq = new HashMap<>();
+        Map<Machine, List<Operation>> mapo = new HashMap<>();
         for (Machine m : machines) {
             int lag = 0;
             int mid = m.getId();
-            List<RPQ> rpqs = new ArrayList<>();
-            List<RPQ> rpqsed = new ArrayList<>();
-            for (Operation o : e[mid]) {
-                RPQ rpq = new RPQ();
-                rpq.setO(o);
-                rpq.setP(o.getDuration());
-  /*              rpq.setR();
-                rpq.setQ();*/
-                rpqs.add(rpq);
-            }
+            List<Operation> operations = new ArrayList<>();
+            List<Operation> operationsed = new ArrayList<>();
+            operations.addAll(e[mid]);
 
 
             int t = 0;
-            while (rpqsed.size() < e[mid].size()) {
-                RPQ rpqmin = null;
+            while (operationsed.size() < e[mid].size()) {
+                Operation omin = operations.get(0);
                 int rmin = Integer.MAX_VALUE;
                 int pmin = Integer.MAX_VALUE;
-                for (RPQ rpq : rpqs) {
-                    if (t > rpq.getR()) {
-                        if (pmin > rpq.getP()) {
-                            pmin = rpq.getP();
-                            rmin = rpq.getR();
-                            rpqmin = rpq;
+                for (Operation o : operations) {
+                    if (t > o.getStart()) {
+                        if (pmin > o.getDuration()) {
+                            pmin = o.getDuration();
+                            rmin = o.getStart();
+                            omin = o;
                         }
                     } else {
-                        if (rmin > rpq.getR()) {
-                            rmin = rpq.getR();
-                            rpqmin = rpq;
+                        if (rmin > o.getStart()) {
+                            rmin = o.getStart();
+                            omin = o;
                         }
                     }
                 }
-                if (t < rpqmin.getR()) {
-                    t = rpqmin.getR() + rpqmin.getP();
+                if (t < omin.getStart()) {
+                    t = omin.getStart() + omin.getDuration();
                 } else {
-                    t = t + rpqmin.getP();
+                    t = t + omin.getDuration();
                 }
-                lag += Integer.max(t - rpqmin.getQ(), 0);
-                rpqsed.add(rpqmin);
-                rpqs.remove(rpqmin);
+                lag += Integer.max(t - omin.getEnd(), 0);
+                operationsed.add(omin);
+                operations.remove(omin);
             }
 
 
             maplag.put(m, lag);
-            maprpq.put(m, rpqsed);
+            mapo.put(m, operationsed);
         }
         int maxlag = 0;
         for (Map.Entry<Machine, Integer> entry : maplag.entrySet()) {
@@ -87,9 +80,7 @@ public class SBP {
                 mbottleneck = entry.getKey();
             }
         }
-        for (RPQ rpq : maprpq.get(mbottleneck)) {
-            s.scheduleOperationLeft(rpq.getO());
-        }
+        s.scheduleOneMachine(mapo.get(mbottleneck),maxlag);
         return mbottleneck;
     }
 
@@ -97,43 +88,6 @@ public class SBP {
         RPQ rpq = new RPQ();
         return rpq;
     }*/
-}
 
-class RPQ {
-    private Operation o;
-    private int r;
-    private int p;
-    private int q;
 
-    public Operation getO() {
-        return o;
-    }
-
-    public void setO(Operation o) {
-        this.o = o;
-    }
-
-    public int getR() {
-        return r;
-    }
-
-    public void setR(int r) {
-        this.r = r;
-    }
-
-    public int getP() {
-        return p;
-    }
-
-    public void setP(int p) {
-        this.p = p;
-    }
-
-    public int getQ() {
-        return q;
-    }
-
-    public void setQ(int q) {
-        this.q = q;
-    }
 }
