@@ -25,12 +25,12 @@ public class Main {
 	}
 
 	public static void opendeurdagKulak() {
-		String filepath=true?"C:/Users/lm/IdeaProjects/TabuAddTran/testinstances/abz5.txt":
-				"C:/Users/lm/IdeaProjects/TabuAddTran/jsp/jsp_tran1.txt";
+		String filepath=false?"./testinstances/abz5.txt":
+				"./jsp/js_1.txt";
 		Problem p = Parser
 				.parseInstance(filepath);
 		System.out.println(p);
-		SBP.getInitSol(p);
+		System.out.println(SBP.getInitSol(p));
 		long time1=System.currentTimeMillis();
 		Solution s = TabuSearch.getInitialSolutionOnlyLeft(p);
 		System.out.println(s);

@@ -1,5 +1,7 @@
 package tabusearch;
 
+import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
+
 import java.util.*;
 
 /**
@@ -563,17 +565,87 @@ public class Solution extends Problem {
     }
 
     public void scheduleOneMachine(List<Operation> os, int lag) {
-        SBP_MAXSPAN += lag;
         for (int i = 0; i < os.size(); i++) {
             scheduleOperationLeft(os.get(i));
         }
-        for (int i = 0; i < os.size(); i++) {
-            if(i == 0){
-              //TODO
+        SBP_MAXSPAN += lag;
+        updateSAndE();
+    }
 
-
+    public void updateSAndE() {
+        Stack<Operation> stack = topologicalOrder();
+        for (Operation o : getV())
+            o.setEnd(SBP_MAXSPAN);
+        while (!stack.isEmpty()) {
+            Operation o = stack.pop();
+            for (Operation next : getNextofOperation(o)) {
+                if (next.getEnd() - next.getDuration() < o.getEnd()) {
+                    o.setEnd(next.getEnd() - next.getDuration());
+                }
             }
         }
     }
 
+    public Stack<Operation> topologicalOrder() {
+
+        int[] indegree = findInDegree();
+        Stack<Operation> zeros = new Stack<>();
+        Stack<Operation> stack = new Stack<>();
+        for (int i = 0; i < getNumberOfOperations(); i++)
+            if (indegree[i] == 0)
+                zeros.push(getV().get(i));
+
+        while (!zeros.isEmpty()) {
+            Operation zero = zeros.pop();
+            int i = zero.getId();
+            stack.push(zero);
+            for (Operation next : getNextofOperation(zero)) {
+                if (--indegree[next.getId()] == 0)
+                    zeros.push(next);
+                if (zero.getStart() + zero.getDuration() > next.getStart())
+                    next.setStart(zero.getStart() + zero.getDuration());
+            }
+        }
+        return stack;
+    }
+
+    public int[] findInDegree() {
+        int[] indegree = new int[getNumberOfOperations()];
+        for (int i = 0; i < getNumberOfOperations(); i++)
+            for (Operation o : getNextofOperation(getV().get(i))) {
+                ++indegree[o.getId()];
+            }
+        return indegree;
+    }
+
+    public List<Operation> getNextofOperation(Operation o) {
+        List<Operation> nexts = new ArrayList<>();
+        if (o.getId() == 0) {
+            for (LinkedList<Operation> ai : getA()) {
+                nexts.add(ai.getFirst());
+            }
+            return nexts;
+        }
+        for (LinkedList<Operation> ai : getA()) {
+            if(ai.getLast().equals(o)){
+                nexts.add(getV().get(getNumberOfOperations()-1));
+            }
+        }
+        nexts.add(getSJOfOperation(o));
+        int mid = o.getMachine().getId();
+        for (int i = 0; i < getSchedule()[mid].length; i++) {
+            if (getSchedule()[mid][i] == null) {
+                break;
+            }
+            if (getSchedule()[mid][i].equals(o)) {
+                if (i != getSchedule()[mid].length - 1) {
+                    Operation next = getSchedule()[mid][i + 1];
+                    if (next != null) {
+                        nexts.add(next);
+                    }
+                }
+            }
+        }
+        return nexts;
+    }
 }

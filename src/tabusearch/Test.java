@@ -3,7 +3,7 @@ package tabusearch;
 import java.util.*;
 
 public class Test {
-    public static void main(String[] args){
+/*    public static void main(String[] args){
         int t = 0;
         int lag=0;
         List<RPQ> rpqs = new ArrayList<>();
@@ -81,5 +81,5 @@ public class Test {
             System.out.println("t:"+t);
         }
 
-    }
+    }*/
 }
