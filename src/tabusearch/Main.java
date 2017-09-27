@@ -25,24 +25,26 @@ public class Main {
 	}
 
 	public static void opendeurdagKulak() {
-		String filepath=false?"./testinstances/abz5.txt":
-				"./jsp/js_1.txt";
+		String filepath=true?"./testinstances/ft06.txt":
+				"./jsp/jsp2.txt";
 		Problem p = Parser
 				.parseInstance(filepath);
-		System.out.println(p);
-		System.out.println(SBP.getInitSol(p));
+		System.out.println("**********Problem************:\n"+p);
 		long time1=System.currentTimeMillis();
-		Solution s = TabuSearch.getInitialSolutionOnlyLeft(p);
-		System.out.println(s);
+		Solution sbp=SBP.getInitSol(p);
+		System.out.println("**********SBP************:\n"+sbp);
 		long time2=System.currentTimeMillis();
-		System.out.println("1st time:"+(time2-time1)/1000.0f);
-/*		Solution optS = TabuSearch.tabuSearch(p);
-		System.out.println(optS);*/
-	//	long time3=System.currentTimeMillis();
-	//	System.out.println("opt time:"+(time3-time2)/1000.0f);
+		System.out.println("________SBP time\n"+(time2-time1)/1000.0f);
+		Solution leftS = TabuSearch.getInitialSolutionOnlyLeft(p);
+		System.out.println("**********LEFT************:\n"+leftS);
+		long time3=System.currentTimeMillis();
+		System.out.println("________LEFT time\n"+(time3-time2)/1000.0f);
+		Solution optS = TabuSearch.tabuSearch(leftS);
+		System.out.println("**********TABU************\n"+optS);
+		long time4=System.currentTimeMillis();
+		System.out.println("________TABU time\n"+(time4-time3)/1000.0f);
 		//optS.printSol();
 	}
-
 	/**
 	 * Tabu search one Test instance.
 	 */

@@ -28,7 +28,7 @@ public class SBP {
     }
 
     private static Machine findBottleneck(Set<Machine> machines, Solution s) {
-        Machine mbottleneck = null;
+
         LinkedList<Operation>[] e = s.getE();
         Map<Machine, Integer> maplag = new HashMap<>();
         Map<Machine, List<Operation>> mapo = new HashMap<>();
@@ -64,7 +64,8 @@ public class SBP {
                 } else {
                     t = t + omin.getDuration();
                 }
-                lag += Integer.max(t - omin.getEnd(), 0);
+                if (t - omin.getEnd() > lag)
+                    lag = t - omin.getEnd();
                 operationsed.add(omin);
                 operations.remove(omin);
             }
@@ -74,13 +75,14 @@ public class SBP {
             mapo.put(m, operationsed);
         }
         int maxlag = 0;
+        Machine mbottleneck = machines.iterator().next();
         for (Map.Entry<Machine, Integer> entry : maplag.entrySet()) {
             if (entry.getValue() > maxlag) {
                 maxlag = entry.getValue();
                 mbottleneck = entry.getKey();
             }
         }
-        s.scheduleOneMachine(mapo.get(mbottleneck),maxlag);
+        s.scheduleOneMachine(mapo.get(mbottleneck), maxlag);
         return mbottleneck;
     }
 

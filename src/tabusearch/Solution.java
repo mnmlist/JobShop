@@ -291,7 +291,7 @@ public class Solution extends Problem {
         float[][] sol = new float[getNumberOfJobs() + 1][getMaximumNumberOfOperationsOnJob()];
         int id = 1;
         for (int row = 0; row < getNumberOfJobs(); row++) {
-            for (int column = 0; column < getMaximumNumberOfOperationsOnJob(); column++) {
+            for (int column = 0; column < getA()[row].size(); column++) {
                 float earliestStartingTime = 0;
                 Operation vorige = label[id].getOperation();
                 while (vorige != null) {
@@ -578,11 +578,15 @@ public class Solution extends Problem {
             o.setEnd(SBP_MAXSPAN);
         while (!stack.isEmpty()) {
             Operation o = stack.pop();
-            for (Operation next : getNextofOperation(o)) {
-                if (next.getEnd() - next.getDuration() < o.getEnd()) {
-                    o.setEnd(next.getEnd() - next.getDuration());
+            List<Operation> nexts = getNextofOperation(o);
+            if (nexts != null) {
+                for (Operation next : nexts) {
+                    if (next.getEnd() - next.getDuration() < o.getEnd()) {
+                        o.setEnd(next.getEnd() - next.getDuration());
+                    }
                 }
             }
+
         }
     }
 
@@ -599,11 +603,14 @@ public class Solution extends Problem {
             Operation zero = zeros.pop();
             int i = zero.getId();
             stack.push(zero);
-            for (Operation next : getNextofOperation(zero)) {
-                if (--indegree[next.getId()] == 0)
-                    zeros.push(next);
-                if (zero.getStart() + zero.getDuration() > next.getStart())
-                    next.setStart(zero.getStart() + zero.getDuration());
+            List<Operation> nexts = getNextofOperation(zero);
+            if (nexts != null) {
+                for (Operation next : nexts) {
+                    if (--indegree[next.getId()] == 0)
+                        zeros.push(next);
+                    if (zero.getStart() + zero.getDuration() > next.getStart())
+                        next.setStart(zero.getStart() + zero.getDuration());
+                }
             }
         }
         return stack;
@@ -611,14 +618,21 @@ public class Solution extends Problem {
 
     public int[] findInDegree() {
         int[] indegree = new int[getNumberOfOperations()];
-        for (int i = 0; i < getNumberOfOperations(); i++)
-            for (Operation o : getNextofOperation(getV().get(i))) {
-                ++indegree[o.getId()];
-            }
+        for (int i = 0; i < getNumberOfOperations(); i++) {
+            List<Operation> nexts = getNextofOperation(getV().get(i));
+            if (nexts != null)
+                for (Operation next : nexts) {
+                    ++indegree[next.getId()];
+                }
+        }
+
+
         return indegree;
     }
 
     public List<Operation> getNextofOperation(Operation o) {
+        if (o.getId() == getNumberOfOperations() - 1)
+            return null;
         List<Operation> nexts = new ArrayList<>();
         if (o.getId() == 0) {
             for (LinkedList<Operation> ai : getA()) {
@@ -627,11 +641,13 @@ public class Solution extends Problem {
             return nexts;
         }
         for (LinkedList<Operation> ai : getA()) {
-            if(ai.getLast().equals(o)){
-                nexts.add(getV().get(getNumberOfOperations()-1));
+            if (ai.getLast().equals(o)) {
+                nexts.add(getV().get(getNumberOfOperations() - 1));
             }
         }
-        nexts.add(getSJOfOperation(o));
+        Operation sj = getSJOfOperation(o);
+        if (sj != null)
+            nexts.add(sj);
         int mid = o.getMachine().getId();
         for (int i = 0; i < getSchedule()[mid].length; i++) {
             if (getSchedule()[mid][i] == null) {
