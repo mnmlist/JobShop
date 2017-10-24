@@ -1,59 +1,28 @@
 package tabusearch;
 
-import java.util.Random;
 
 public class ITabuList {
 
-    /**
-     * Initialize an empty tabu list for a given problem. The minimum and
-     * maximum length of the tabu list will be initialised automatically.
-     *
-     * @param p The JSS instance.
-     */
-    public ITabuList(Problem p) {
+    public ITabuList(Problem p, int mode) {
         matrix = new int[p.getNumberOfOperations()][p.getNumberOfOperations()];
         L = 10 + p.getNumberOfJobs() / (p.getNumberOfMachines() * 2);
         setLength(L);
+        this.mode = mode;
     }
 
+    public int mode;
     private int L;
-    /************************************
-     * CONTENT (matrix)
-     ************************************/
+    private int[][] matrix;
 
-    /**
-     * Variable referencing the tabu list, which can be visualised as a matrix.
-     * <p>
-     * Matrix[i][j] contains the count of the iteration in which the arc (i,j)
-     * has been reversed last time.
-     */
-    private final int[][] matrix;
-
-    /**
-     * @return the matrix
-     */
     public int[][] getMatrix() {
         return matrix;
     }
 
-    /************************************
-     * MODIFICATIONS TO THE TABULIST
-     ************************************/
-
-    /**
-     * Update the tabu list.
-     *
-     * @param m
-     * @param iterationCount
-     * @param phase
-     */
     public void update(Move m, int iterationCount, int numberOfIterationsOfNoImprovement, Phase phase) {
         try {
             matrix[m.getInversion().get(0).getId()][m.getInversion().get(1)
                     .getId()] = iterationCount + 1;
             if (m.getNumberOfOperationsInInversion() == 3) {
-                // We always consider reversal of three arcs, so memorize all
-                // arcs considered.
                 matrix[m.getInversion().get(1).getId()][m.getInversion().get(2)
                         .getId()] = iterationCount + 1;
                 matrix[m.getInversion().get(0).getId()][m.getInversion().get(2)
@@ -62,29 +31,29 @@ public class ITabuList {
 /*            if (iterationCount / getLambda() == 0) {
                 randomlyChooseMinAndMax();
             }*/
-            int K = 800 / 4;
-            if (numberOfIterationsOfNoImprovement < K) {
-                setLength(L);
-            } else if (numberOfIterationsOfNoImprovement < K * 2) {
-                int l = (numberOfIterationsOfNoImprovement - K) / (5 * K) * L + L;
-                setLength(l);
-            } else if (numberOfIterationsOfNoImprovement < K * 3) {
-                int l = (int) ((numberOfIterationsOfNoImprovement - 2 * K) * 4 / (5 * K) * L + 1.2 * L);
-                setLength(l);
-            } else if (numberOfIterationsOfNoImprovement < K * 4) {
-                setLength(2 * L);
+            if (mode == 1) {
+                int K = 800 / 4;
+                if (numberOfIterationsOfNoImprovement < K) {
+                    setLength(L);
+                } else if (numberOfIterationsOfNoImprovement < K * 2) {
+                    float a = ((float) (numberOfIterationsOfNoImprovement - K)) / ((float) (5 * K));
+                    int l = (int) (a * L + L);
+                    setLength(l);
+                } else if (numberOfIterationsOfNoImprovement < K * 3) {
+                    float a = ((float) (numberOfIterationsOfNoImprovement - 2 * K) * 4) / ((float) (5 * K));
+                    int l = (int) (a * L + 1.2 * L);
+                    setLength(l);
+                } else if (numberOfIterationsOfNoImprovement < K * 4) {
+                    setLength(2 * L);
+                }
             }
         } catch (Exception e) {
             System.out.println("Invalid move.");
-        } finally { // always update the list length
+        } finally {
             updateListLength(phase);
         }
     }
 
-    /**
-     * Randomly choose the value min and max. Min will be chosen between a and
-     * b, max will be chosen between A and B.
-     */
     private void randomlyChooseMinAndMax() {
         //todo
     }
@@ -110,14 +79,14 @@ public class ITabuList {
         return (getMatrix()[j][i] + getLength()) <= k;
     }
 
-    private static int length = 1;
+    private  int length = 10;
 
-    public static int getLength() {
+    public  int getLength() {
         return length;
     }
 
-    public static void setLength(int length) {
-        ITabuList.length = length;
+    public  void setLength(int length) {
+        this.length = length;
     }
 
     @Override

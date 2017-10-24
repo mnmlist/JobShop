@@ -30,7 +30,7 @@ public class TabuSearch {
      *
      * @param p The given JSS instance
      * @return The optimal solution of the tabu search
-     * @note algorithm TS in the paper
+     * @note algorithm TS2 in the paper
      */
     public static Solution tabuSearch(Problem p) {
         // Get the initial solution and initialize variables.
@@ -44,7 +44,7 @@ public class TabuSearch {
         float bestCost = s.getCost();
         Solution bestSol = s;
         TabuList t = new TabuList(p);
-       // long time2 = System.currentTimeMillis();
+        // long time2 = System.currentTimeMillis();
         // Try to improve the solution.
         // K is the number of the iteration (the number of moves already
         // executed) at the point where a move is gonna be executed.
@@ -111,12 +111,72 @@ public class TabuSearch {
 
             K++;
         }
-      //  long time3 = System.currentTimeMillis();
-     //   System.out.println("opt time:" + (time3 - time2) / 1000.0f);
+        System.out.println(K);
+        //  long time3 = System.currentTimeMillis();
+        //   System.out.println("opt time:" + (time3 - time2) / 1000.0f);
         return bestSol;
     }
-    public static Solution its(Problem p) {
-        // Get the initial solution and initialize variables.
+
+    public static Solution its(Solution p, int mode) {
+        Solution s = p;
+        float bestCost = s.getCost();
+        Solution bestSol = s;
+        ITabuList t = new ITabuList(p, mode);
+        int numberOfIterationsOfNoImprovement = 0;
+        int K = 0;
+        while (checkStoppingRule(K, numberOfIterationsOfNoImprovement)
+                && K < getSafetyStop() && bestCost != p.getOptimalCost()) {
+            Solution s_bar = s;
+            float costS_bar = Integer.MAX_VALUE;
+            Move appliedMove = null;
+
+            for (Move m : s.getPossibleInversionsN1()) {
+                Neighbor1 n = new Neighbor1(m, s);
+                float costNeighbor = n.getNewSolution().getCost();
+
+                if (costNeighbor < costS_bar
+                        && (costNeighbor < bestCost || t.isAllowed(m, K))) {
+                    s_bar = n.getNewSolution();
+                    costS_bar = costNeighbor;
+                    appliedMove = m;
+                }
+            }
+            if (appliedMove == null) {
+                HashSet<Move> inversions = s.getPossibleInversionsN1();
+                Move m = chooseRandomMoveFromSet(inversions);
+                Neighbor1 n = new Neighbor1(m, s);
+                s_bar = n.getNewSolution();
+                appliedMove = m;
+            }
+
+            Phase phase = Phase.WORSEN;
+
+            if (s_bar.getCost() < s.getCost()) {
+                phase = Phase.IMPROVING;
+            }
+
+            if ((s_bar.getCost() < bestCost)
+                    || (numberOfIterationsOfNoImprovement == getDelta())) {
+                bestSol = s_bar;
+                bestCost = s_bar.getCost();
+                numberOfIterationsOfNoImprovement = 0;
+                phase = Phase.EUREKA;
+            } else {
+                numberOfIterationsOfNoImprovement++;
+            }
+
+            t.update(appliedMove, K, numberOfIterationsOfNoImprovement, phase); // add applied move to tabu list
+
+            s = s_bar;
+
+            K++;
+        }
+
+        bestSol.K = K;
+        return bestSol;
+    }
+
+    public static Solution ts(Problem p) {
         Solution s = null;
         if (p instanceof Solution)
             s = (Solution) p;
@@ -126,15 +186,14 @@ public class TabuSearch {
 
         float bestCost = s.getCost();
         Solution bestSol = s;
-        ITabuList t = new ITabuList(p);
-     //   long time2 = System.currentTimeMillis();
+        ITabuList t = new ITabuList(p, 0);
+        //   long time2 = System.currentTimeMillis();
         // Try to improve the solution.
         // K is the number of the iteration (the number of moves already
         // executed) at the point where a move is gonna be executed.
-        int numberOfIterationsOfNoImprovement = 0;
+        //  int numberOfIterationsOfNoImprovement = 0;
         int K = 0;
-        while (checkStoppingRule(K, numberOfIterationsOfNoImprovement)
-                && K < getSafetyStop() && bestCost != p.getOptimalCost()) {
+        while (K < getMaxiter() && bestCost != p.getOptimalCost()) {
             Solution s_bar = s;
             float costS_bar = Integer.MAX_VALUE;
             Move appliedMove = null; // no move
@@ -178,26 +237,22 @@ public class TabuSearch {
             // update the best solution found so far.
             // Also, if there has been no improvement during the last \Delta
             // iterations, restart process (current solution = best solution).
-            if ((s_bar.getCost() < bestCost)
-                    || (numberOfIterationsOfNoImprovement == getDelta())) {
+            if ((s_bar.getCost() < bestCost)) {
                 bestSol = s_bar;
                 bestCost = s_bar.getCost();
-                numberOfIterationsOfNoImprovement = 0;
                 phase = Phase.EUREKA;
-            } else {
-                numberOfIterationsOfNoImprovement++;
             }
 
-            t.update(appliedMove, K, numberOfIterationsOfNoImprovement,phase); // add applied move to tabu list
+            t.update(appliedMove, K, 0, phase); // add applied move to tabu list
 
             s = s_bar;
 
             K++;
         }
-     //   long time3 = System.currentTimeMillis();
-       // System.out.println("opt time:" + (time3 - time2) / 1000.0f);
+        bestSol.K = K;
         return bestSol;
     }
+
     /**
      * @param k
      * @param numberOfIterationsOfNoImprovement
@@ -223,7 +278,7 @@ public class TabuSearch {
      */
     private static Move chooseRandomMoveFromSet(HashSet<Move> inversions) {
         int size = inversions.size();
-        int item = new Random().nextInt(size);
+        int item = false ? new Random().nextInt(size) : 0;
         int i = 0;
         for (Move m : inversions) {
             if (i == item)

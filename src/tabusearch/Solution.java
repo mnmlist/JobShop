@@ -22,7 +22,7 @@ public class Solution extends Problem {
      * Initialize a new solution with a given problem and given schedule.
      */
     public Solution(Problem p, Operation[][] s) {
-        super(p.getV(), p.getA(), p.getE());
+        super(p.getV(), p.getA(), p.getE(), p.getOptimalCost());
         setLongestPath(new LinkedList<Operation>());
         initalSAndE();
         schedule = s;
@@ -664,4 +664,5 @@ public class Solution extends Problem {
         }
         return nexts;
     }
+    public int K;
 }

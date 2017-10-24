@@ -3,12 +3,10 @@ package tabusearch;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
-import javax.swing.plaf.SliderUI;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,22 +26,24 @@ public class Main {
      * Main method
      */
     public static void main(String args[]) throws FileNotFoundException {
-        //opendeurdagKulak();
+      //  opendeurdagKulak();
 /*		String filepath="./testinstances/orb02.txt";
         left(filepath);
 		sbp(filepath);*/
-        outFile("");
+        outFile();
     }
 
-    public static void outFile(String outfile) {
+    public static void outFile() {
+        String pre = "TS1_";
+        String outfile = "";
         if (outfile.equals("")) {
-             int num=1;
-             outfile=num+".xls";
-             File file=new File("./outtest/"+outfile);
-            while(file.exists()){
+            int num = 1;
+            outfile = pre + num + ".xls";
+            File file = new File("./outtest/" + outfile);
+            while (file.exists()) {
                 num++;
-                outfile=num+".xls";
-                file=new File("./outtest/"+outfile);
+                outfile = pre + num + ".xls";
+                file = new File("./outtest/" + outfile);
             }
         }
         // 第一步，创建一个webbook，对应一个Excel文件
@@ -71,29 +71,33 @@ public class Main {
 
         String tests[] = {
                 "ft06"
-/*                ,
-                "ft10",
-                "abz5",
-                "abz6",
+               ,
                 "la01",
-                "la02",
-                "orb01",
-                "orb02"*/
+                "la06",
+                "ft10",
+                "ft20"
         };
         List<Solver> solvers = new ArrayList<>();
-        solvers.add(new SBPSolver());
-        solvers.add(new LeftSolver());
-        solvers.add(new TSSolver());
+        // solvers.add(new SBPSolver());
+        //solvers.add(new TS1());
+        solvers.add(new TS2());
+
+
+        // solvers.add(new TS());
+
         for (int i = 0; i < solvers.size(); i++) {
             Solver solver = solvers.get(i);
-            cell = row.createCell((short) 3 * i + 4);
+            cell = row.createCell((short) 4 * i + 4);
             cell.setCellValue(solver.name + "_INIT");
             cell.setCellStyle(style);
-            cell = row.createCell((short) 3 * i + 5);
+            cell = row.createCell((short) 4 * i + 5);
             cell.setCellValue(solver.name + "_OPT");
             cell.setCellStyle(style);
-            cell = row.createCell((short) 3 * i + 6);
+            cell = row.createCell((short) 4 * i + 6);
             cell.setCellValue(solver.name + "_TIME");
+            cell.setCellStyle(style);
+            cell = row.createCell((short) 4 * i + 7);
+            cell.setCellValue(solver.name + "_K");
             cell.setCellStyle(style);
         }
         for (int i = 0; i < tests.length; i++) {
@@ -107,12 +111,13 @@ public class Main {
                 Solver solver = solvers.get(j);
                 solver.setP(p);
                 solver.excute();
-                row.createCell((short) 3 * j + 4).setCellValue(solver.initcost);
-                row.createCell((short) 3 * j + 5).setCellValue(solver.lastcost);
-                row.createCell((short) 3 * j + 6).setCellValue(solver.time);
+                row.createCell((short) 4 * j + 4).setCellValue(solver.initcost);
+                row.createCell((short) 4 * j + 5).setCellValue(solver.lastcost);
+                row.createCell((short) 4 * j + 6).setCellValue(solver.time);
+                row.createCell((short) 4 * j + 7).setCellValue(solver.K);
                 solver.print();
             }
-            System.out.println(tests[i]+"  complete");
+            System.out.println(tests[i] + "  complete");
         }
         try {
             FileOutputStream fout = new FileOutputStream("./outtest/" + outfile);
@@ -151,25 +156,31 @@ public class Main {
             System.out.println("________TABU time\n"+(time4-time3)/1000.0f);
         }*/
     public static void opendeurdagKulak() {
-        String filepath = true ? "./testinstances/ft06.txt" :
-                "./jsp/jsp2.txt";
-        Problem p = Parser
+       String filepath = true ? "./testinstances/ft06.txt" :
+                "./jsp/jsp3.txt";
+        Problem p2 = Parser
                 .parseInstance(filepath);
-        System.out.println("**********Problem************:\n" + p);
-        long time1 = System.currentTimeMillis();
-        Solution sbp = SBP.getInitSol(p);
-        System.out.println("**********SBP************:\n" + sbp);
-        long time2 = System.currentTimeMillis();
-        System.out.println("________SBP time\n" + (time2 - time1) / 1000.0f);
-        Solution leftS = TabuSearch.getInitialSolutionOnlyLeft(p);
-        System.out.println("**********LEFT************:\n" + leftS);
-        long time3 = System.currentTimeMillis();
-        System.out.println("________LEFT time\n" + (time3 - time2) / 1000.0f);
-        Solution optS = TabuSearch.tabuSearch(sbp);
-        System.out.println("**********TABU************\n" + optS);
-        long time4 = System.currentTimeMillis();
-        System.out.println("________TABU time\n" + (time4 - time3) / 1000.0f);
-        //optS.printSol();
+
+        Solution init = TabuSearch.getInitialSolutionOnlyLeft(p2);
+        init.getCost();
+        TabuSearch.its(init, 0);
+
+
+
+
+/*
+        Problem p1 = Parser.parseInstance(filepath);
+
+        Solution init1 = TabuSearch.getInitialSolutionOnlyLeft(p2);
+        init1.getCost();
+        TabuSearch.its(init1, 0);*/
+
+/*        Problem p = Parser
+                .parseInstance("D:/Develop/Project/IdeaProject/JobShopTest/testinstances/ft06.txt");
+        Solution s = TabuSearch.getInitialSolutionOnlyLeft(p);
+        Solution s1 = TabuSearch.getInitialSolutionOnlyLeft(p);
+        System.out.println(s);
+        System.out.println(s1);*/
     }
 
     /**
@@ -328,7 +339,7 @@ public class Main {
 
 }
 
-class Solver {
+abstract class Solver {
     public Solution init;
     public Solution last;
     public float initcost;
@@ -336,7 +347,7 @@ class Solver {
     public float time;
     public Problem p;
     public String name;
-
+    public int K;
     public void setP(Problem p) {
         this.p = p;
     }
@@ -353,11 +364,10 @@ class Solver {
         return time;
     }
 
-    public void excute() {
+    public abstract void excute();
 
-    }
-    public void print(){
-        System.out.println(name+"    "+time);
+    public void print() {
+        System.out.println(name + "    " + lastcost + "    " + time+"   "+K);
     }
 }
 
@@ -376,6 +386,7 @@ class SBPSolver extends Solver {
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
+        K=last.K;
     }
 }
 
@@ -394,21 +405,69 @@ class LeftSolver extends Solver {
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
+        K=last.K;
     }
 }
-class TSSolver extends Solver{
-    public TSSolver(){
-        name="TS";
+
+/*
+    动态tabulist
+ */
+class TS1 extends Solver {
+    public TS1() {
+        name = "TS1";
     }
+
     @Override
     public void excute() {
         long time1 = System.currentTimeMillis();
         init = TabuSearch.getInitialSolutionOnlyLeft(p);
         long time2 = System.currentTimeMillis();
-        last = TabuSearch.its(init);
+        last = TabuSearch.its(init, 1);
         long time3 = System.currentTimeMillis();
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
+        K=last.K;
+    }
+}
+
+/*
+    静态tabulist
+ */
+class TS2 extends Solver {
+    public TS2() {
+        name = "TS2";
+    }
+
+    @Override
+    public void excute() {
+        long time1 = System.currentTimeMillis();
+        init = TabuSearch.getInitialSolutionOnlyLeft(p);
+        long time2 = System.currentTimeMillis();
+        last = TabuSearch.its(init, 0);
+        long time3 = System.currentTimeMillis();
+        initcost = init.getCost();
+        lastcost = last.getCost();
+        time = (time3 - time2) / 1000.0f;
+        K=last.K;
+    }
+}
+
+class TS extends Solver {
+    public TS() {
+        name = "TS";
+    }
+
+    @Override
+    public void excute() {
+        long time1 = System.currentTimeMillis();
+        init = TabuSearch.getInitialSolutionOnlyLeft(p);
+        long time2 = System.currentTimeMillis();
+        last = TabuSearch.ts(init);
+        long time3 = System.currentTimeMillis();
+        initcost = init.getCost();
+        lastcost = last.getCost();
+        time = (time3 - time2) / 1000.0f;
+        K=last.K;
     }
 }

@@ -16,8 +16,8 @@ public abstract class Neighbor {
 	 * Initialize a new neighbor with a given move and a given original
 	 * solution. The new neighboring solution will automatically be initialised.
 	 * 
-	 * @param s
-	 * @param t
+	 * @param m
+	 * @param sOriginal
 	 */
 	public Neighbor(Move m, Solution sOriginal) {
 		move = m;
