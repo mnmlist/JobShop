@@ -44,7 +44,7 @@ public class TabuSearch {
         float bestCost = s.getCost();
         Solution bestSol = s;
         TabuList t = new TabuList(p);
-        long time2 = System.currentTimeMillis();
+       // long time2 = System.currentTimeMillis();
         // Try to improve the solution.
         // K is the number of the iteration (the number of moves already
         // executed) at the point where a move is gonna be executed.
@@ -111,11 +111,93 @@ public class TabuSearch {
 
             K++;
         }
-        long time3 = System.currentTimeMillis();
-        System.out.println("opt time:" + (time3 - time2) / 1000.0f);
+      //  long time3 = System.currentTimeMillis();
+     //   System.out.println("opt time:" + (time3 - time2) / 1000.0f);
         return bestSol;
     }
+    public static Solution its(Problem p) {
+        // Get the initial solution and initialize variables.
+        Solution s = null;
+        if (p instanceof Solution)
+            s = (Solution) p;
+        else {
+            s = null;
+        }
 
+        float bestCost = s.getCost();
+        Solution bestSol = s;
+        ITabuList t = new ITabuList(p);
+     //   long time2 = System.currentTimeMillis();
+        // Try to improve the solution.
+        // K is the number of the iteration (the number of moves already
+        // executed) at the point where a move is gonna be executed.
+        int numberOfIterationsOfNoImprovement = 0;
+        int K = 0;
+        while (checkStoppingRule(K, numberOfIterationsOfNoImprovement)
+                && K < getSafetyStop() && bestCost != p.getOptimalCost()) {
+            Solution s_bar = s;
+            float costS_bar = Integer.MAX_VALUE;
+            Move appliedMove = null; // no move
+
+            // Check all possible inversions.
+            for (Move m : s.getPossibleInversionsN1()) {
+                Neighbor1 n = new Neighbor1(m, s);
+                float costNeighbor = n.getNewSolution().getCost();
+
+                // Check if the neighbor improves the solution and is allowed
+                // following to the tabu list.
+                // Make an exception to tabu list (aspiration criterion) if the
+                // cost of the neighbor
+                // solution is lower than the solution found upon now.
+                if (costNeighbor < costS_bar
+                        && (costNeighbor < bestCost || t.isAllowed(m, K))) {
+                    s_bar = n.getNewSolution();
+                    costS_bar = costNeighbor;
+                    appliedMove = m;
+                }
+            }
+
+            // Randomization. If all possible moves belong to tabu list and none
+            // satisfies aspiration criterion, choose a random move from all
+            // possible ones.
+            if (appliedMove == null) {
+                HashSet<Move> inversions = s.getPossibleInversionsN1();
+                Move m = chooseRandomMoveFromSet(inversions);
+                Neighbor1 n = new Neighbor1(m, s);
+                s_bar = n.getNewSolution();
+                appliedMove = m;
+            }
+
+            Phase phase = Phase.WORSEN;
+
+            if (s_bar.getCost() < s.getCost()) {
+                phase = Phase.IMPROVING;
+            }
+
+            // If best solution upon now has been improved,
+            // update the best solution found so far.
+            // Also, if there has been no improvement during the last \Delta
+            // iterations, restart process (current solution = best solution).
+            if ((s_bar.getCost() < bestCost)
+                    || (numberOfIterationsOfNoImprovement == getDelta())) {
+                bestSol = s_bar;
+                bestCost = s_bar.getCost();
+                numberOfIterationsOfNoImprovement = 0;
+                phase = Phase.EUREKA;
+            } else {
+                numberOfIterationsOfNoImprovement++;
+            }
+
+            t.update(appliedMove, K, numberOfIterationsOfNoImprovement,phase); // add applied move to tabu list
+
+            s = s_bar;
+
+            K++;
+        }
+     //   long time3 = System.currentTimeMillis();
+       // System.out.println("opt time:" + (time3 - time2) / 1000.0f);
+        return bestSol;
+    }
     /**
      * @param k
      * @param numberOfIterationsOfNoImprovement

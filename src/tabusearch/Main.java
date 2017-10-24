@@ -3,6 +3,7 @@ package tabusearch;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
+import javax.swing.plaf.SliderUI;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -69,18 +70,20 @@ public class Main {
         cell.setCellStyle(style);
 
         String tests[] = {
-                "ft06",
+                "ft06"
+/*                ,
                 "ft10",
                 "abz5",
                 "abz6",
                 "la01",
                 "la02",
                 "orb01",
-                "orb02"
+                "orb02"*/
         };
         List<Solver> solvers = new ArrayList<>();
         solvers.add(new SBPSolver());
         solvers.add(new LeftSolver());
+        solvers.add(new TSSolver());
         for (int i = 0; i < solvers.size(); i++) {
             Solver solver = solvers.get(i);
             cell = row.createCell((short) 3 * i + 4);
@@ -107,6 +110,7 @@ public class Main {
                 row.createCell((short) 3 * j + 4).setCellValue(solver.initcost);
                 row.createCell((short) 3 * j + 5).setCellValue(solver.lastcost);
                 row.createCell((short) 3 * j + 6).setCellValue(solver.time);
+                solver.print();
             }
             System.out.println(tests[i]+"  complete");
         }
@@ -352,6 +356,9 @@ class Solver {
     public void excute() {
 
     }
+    public void print(){
+        System.out.println(name+"    "+time);
+    }
 }
 
 class SBPSolver extends Solver {
@@ -398,7 +405,7 @@ class TSSolver extends Solver{
         long time1 = System.currentTimeMillis();
         init = TabuSearch.getInitialSolutionOnlyLeft(p);
         long time2 = System.currentTimeMillis();
-        last = TabuSearch.tabuSearch(init);
+        last = TabuSearch.its(init);
         long time3 = System.currentTimeMillis();
         initcost = init.getCost();
         lastcost = last.getCost();
