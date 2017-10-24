@@ -389,3 +389,19 @@ class LeftSolver extends Solver {
         time = (time3 - time2) / 1000.0f;
     }
 }
+class TSSolver extends Solver{
+    public TSSolver(){
+        name="TS";
+    }
+    @Override
+    public void excute() {
+        long time1 = System.currentTimeMillis();
+        init = TabuSearch.getInitialSolutionOnlyLeft(p);
+        long time2 = System.currentTimeMillis();
+        last = TabuSearch.tabuSearch(init);
+        long time3 = System.currentTimeMillis();
+        initcost = init.getCost();
+        lastcost = last.getCost();
+        time = (time3 - time2) / 1000.0f;
+    }
+}
