@@ -34,7 +34,7 @@ public class Main {
     }
 
     public static void outFile() {
-        String pre = "TS1_";
+        String pre = "ft20_TS1_";
         String outfile = "";
         if (outfile.equals("")) {
             int num = 1;
@@ -70,18 +70,18 @@ public class Main {
         cell.setCellStyle(style);
 
         String tests[] = {
-                "ft06"
-               ,
-                "la01",
-                "la06",
-                "ft10",
+               // "ft06"
+             //  ,
+               // "la01",
+               // "la06",
+               // "ft10",
                 "ft20"
         };
         List<Solver> solvers = new ArrayList<>();
         // solvers.add(new SBPSolver());
-        //solvers.add(new TS1());
-        solvers.add(new TS2());
 
+        solvers.add(new TS1());
+      //  solvers.add(new TS1());
 
         // solvers.add(new TS());
 
