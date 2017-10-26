@@ -26,7 +26,7 @@ public class Main {
      * Main method
      */
     public static void main(String args[]) throws FileNotFoundException {
-      //  opendeurdagKulak();
+        //  opendeurdagKulak();
 /*		String filepath="./testinstances/orb02.txt";
         left(filepath);
 		sbp(filepath);*/
@@ -34,18 +34,7 @@ public class Main {
     }
 
     public static void outFile() {
-        String pre = "ft20_TS1_";
-        String outfile = "";
-        if (outfile.equals("")) {
-            int num = 1;
-            outfile = pre + num + ".xls";
-            File file = new File("./outtest/" + outfile);
-            while (file.exists()) {
-                num++;
-                outfile = pre + num + ".xls";
-                file = new File("./outtest/" + outfile);
-            }
-        }
+
         // 第一步，创建一个webbook，对应一个Excel文件
         HSSFWorkbook wb = new HSSFWorkbook();
         // 第二步，在webbook中添加一个sheet,对应Excel文件中的sheet
@@ -70,18 +59,18 @@ public class Main {
         cell.setCellStyle(style);
 
         String tests[] = {
-               // "ft06"
-             //  ,
-               // "la01",
-               // "la06",
-               // "ft10",
-                "ft20"
+                // "ft06"
+                //  ,
+                // "la01",
+                // "la06",
+                //"ft10",
+                 "ft20"
         };
         List<Solver> solvers = new ArrayList<>();
         // solvers.add(new SBPSolver());
 
-        solvers.add(new TS1());
-      //  solvers.add(new TS1());
+        solvers.add(new LeftSolver());
+        //  solvers.add(new TS2());
 
         // solvers.add(new TS());
 
@@ -118,6 +107,18 @@ public class Main {
                 solver.print();
             }
             System.out.println(tests[i] + "  complete");
+        }
+        String pre = tests[0] + "_" + solvers.get(0).name + "_";
+        String outfile = "";
+        if (outfile.equals("")) {
+            int num = 1;
+            outfile = pre + num + ".xls";
+            File file = new File("./outtest/" + outfile);
+            while (file.exists()) {
+                num++;
+                outfile = pre + num + ".xls";
+                file = new File("./outtest/" + outfile);
+            }
         }
         try {
             FileOutputStream fout = new FileOutputStream("./outtest/" + outfile);
@@ -156,7 +157,7 @@ public class Main {
             System.out.println("________TABU time\n"+(time4-time3)/1000.0f);
         }*/
     public static void opendeurdagKulak() {
-       String filepath = true ? "./testinstances/ft06.txt" :
+        String filepath = true ? "./testinstances/ft06.txt" :
                 "./jsp/jsp3.txt";
         Problem p2 = Parser
                 .parseInstance(filepath);
@@ -348,6 +349,7 @@ abstract class Solver {
     public Problem p;
     public String name;
     public int K;
+
     public void setP(Problem p) {
         this.p = p;
     }
@@ -367,7 +369,9 @@ abstract class Solver {
     public abstract void excute();
 
     public void print() {
-        System.out.println(name + "    " + lastcost + "    " + time+"   "+K);
+
+        System.out.println();
+        System.out.println(name + "    " + lastcost + "    " + time + "   " + K);
     }
 }
 
@@ -386,7 +390,7 @@ class SBPSolver extends Solver {
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
-        K=last.K;
+        K = last.K;
     }
 }
 
@@ -405,7 +409,7 @@ class LeftSolver extends Solver {
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
-        K=last.K;
+        K = last.K;
     }
 }
 
@@ -414,7 +418,7 @@ class LeftSolver extends Solver {
  */
 class TS1 extends Solver {
     public TS1() {
-        name = "TS1";
+        name = "TS2";
     }
 
     @Override
@@ -427,13 +431,10 @@ class TS1 extends Solver {
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
-        K=last.K;
+        K = last.K;
     }
 }
 
-/*
-    静态tabulist
- */
 class TS2 extends Solver {
     public TS2() {
         name = "TS2";
@@ -444,12 +445,34 @@ class TS2 extends Solver {
         long time1 = System.currentTimeMillis();
         init = TabuSearch.getInitialSolutionOnlyLeft(p);
         long time2 = System.currentTimeMillis();
-        last = TabuSearch.its(init, 0);
+        last = TabuSearch.its(init, 2);
         long time3 = System.currentTimeMillis();
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
-        K=last.K;
+        K = last.K;
+    }
+}
+
+/*
+    静态tabulist
+ */
+class TS0 extends Solver {
+    public TS0() {
+        name = "TS0";
+    }
+
+    @Override
+    public void excute() {
+        long time1 = System.currentTimeMillis();
+        init = TabuSearch.getInitialSolutionOnlyLeft(p);
+        long time2 = System.currentTimeMillis();
+        last = TabuSearch.its(init, 20);
+        long time3 = System.currentTimeMillis();
+        initcost = init.getCost();
+        lastcost = last.getCost();
+        time = (time3 - time2) / 1000.0f;
+        K = last.K;
     }
 }
 
@@ -468,6 +491,6 @@ class TS extends Solver {
         initcost = init.getCost();
         lastcost = last.getCost();
         time = (time3 - time2) / 1000.0f;
-        K=last.K;
+        K = last.K;
     }
 }

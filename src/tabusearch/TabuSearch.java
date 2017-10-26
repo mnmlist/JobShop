@@ -30,7 +30,7 @@ public class TabuSearch {
      *
      * @param p The given JSS instance
      * @return The optimal solution of the tabu search
-     * @note algorithm TS2 in the paper
+     * @note algorithm TS0 in the paper
      */
     public static Solution tabuSearch(Problem p) {
         // Get the initial solution and initialize variables.
@@ -111,9 +111,11 @@ public class TabuSearch {
 
             K++;
         }
-        System.out.println(K);
+
+        // System.out.println(K);
         //  long time3 = System.currentTimeMillis();
         //   System.out.println("opt time:" + (time3 - time2) / 1000.0f);
+        bestSol.K = K;
         return bestSol;
     }
 

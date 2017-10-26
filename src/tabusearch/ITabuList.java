@@ -7,9 +7,11 @@ public class ITabuList {
         matrix = new int[p.getNumberOfOperations()][p.getNumberOfOperations()];
         L = 10 + p.getNumberOfJobs() / (p.getNumberOfMachines() * 2);
         setLength(L);
+        this.p = p;
         this.mode = mode;
     }
 
+    private Problem p;
     public int mode;
     private int L;
     private int[][] matrix;
@@ -33,19 +35,58 @@ public class ITabuList {
             }*/
             if (mode == 1) {
                 int K = 800 / 4;
+                int l = 0;
                 if (numberOfIterationsOfNoImprovement < K) {
-                    setLength(L);
+                    l = L;
                 } else if (numberOfIterationsOfNoImprovement < K * 2) {
                     float a = ((float) (numberOfIterationsOfNoImprovement - K)) / ((float) (5 * K));
-                    int l = (int) (a * L + L);
-                    setLength(l);
+                    l = (int) (a * L + L);
+
                 } else if (numberOfIterationsOfNoImprovement < K * 3) {
                     float a = ((float) (numberOfIterationsOfNoImprovement - 2 * K) * 4) / ((float) (5 * K));
-                    int l = (int) (a * L + 1.2 * L);
-                    setLength(l);
+                    l = (int) (a * L + 1.2 * L);
+
                 } else if (numberOfIterationsOfNoImprovement < K * 4) {
-                    setLength(2 * L);
+                    l = 2 * L;
+                } else {
+                    l = L;
                 }
+                if (l != getLength()) {
+                    System.out.print(l + "  ");
+                }
+                setLength(l);
+
+            } else if (mode == 2) {
+                int K = 800 / 5;
+                int n = p.getNumberOfJobs();
+                int l = 0;
+                if (numberOfIterationsOfNoImprovement < K) {
+                    l = n;
+                } else if (numberOfIterationsOfNoImprovement < K * 2) {
+                    float a = ((float) (numberOfIterationsOfNoImprovement - K)) / ((float) (3 * K));
+                    l = (int) (n - n * a);
+
+                } else if (numberOfIterationsOfNoImprovement < K * 3) {
+                    l = 2 * n / 3;
+
+                } else if (numberOfIterationsOfNoImprovement < K * 4) {
+                    float a = ((float) (numberOfIterationsOfNoImprovement - 3 * K) * 4) / ((float) (3 * K));
+                    l = (int) (2 * n / 3 + n * a);
+                } else if (numberOfIterationsOfNoImprovement < K * 5) {
+                    l = 2 * n;
+                } else {
+                    l = n;
+                }
+                if (l != getLength()) {
+                    System.out.print(l + "  ");
+                }
+                setLength(l);
+            } else {
+                int l = mode;
+                if (l != getLength()) {
+                    System.out.print(l + "  ");
+                }
+                setLength(l);
             }
         } catch (Exception e) {
             System.out.println("Invalid move.");
@@ -79,13 +120,13 @@ public class ITabuList {
         return (getMatrix()[j][i] + getLength()) <= k;
     }
 
-    private  int length = 10;
+    private int length = 10;
 
-    public  int getLength() {
+    public int getLength() {
         return length;
     }
 
-    public  void setLength(int length) {
+    public void setLength(int length) {
         this.length = length;
     }
 
