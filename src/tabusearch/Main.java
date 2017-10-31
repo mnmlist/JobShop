@@ -30,7 +30,7 @@ public class Main {
 /*		String filepath="./testinstances/orb02.txt";
         left(filepath);
 		sbp(filepath);*/
-        outFile();
+        outFile1();
     }
 
     public static void outFile() {
@@ -59,12 +59,12 @@ public class Main {
         cell.setCellStyle(style);
 
         String tests[] = {
-                // "ft06"
+                 "ft06"
                 //  ,
                 // "la01",
                 // "la06",
                 //"ft10",
-                 "ft20"
+               //  "ft20"
         };
         List<Solver> solvers = new ArrayList<>();
         // solvers.add(new SBPSolver());
@@ -128,7 +128,95 @@ public class Main {
             e.printStackTrace();
         }
     }
+    public static void outFile1() {
 
+        HSSFWorkbook wb = new HSSFWorkbook();
+        HSSFSheet sheet = wb.createSheet("test1");
+        HSSFRow row = sheet.createRow((int) 0);
+        HSSFCellStyle style = wb.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER);
+        HSSFCell cell = row.createCell((short) 0);
+        cell.setCellValue("问题");
+        cell.setCellStyle(style);
+        cell = row.createCell((short) 1);
+        cell.setCellValue("job");
+        cell.setCellStyle(style);
+        cell = row.createCell((short) 2);
+        cell.setCellValue("machine");
+        cell.setCellStyle(style);
+        cell = row.createCell((short) 3);
+        cell.setCellValue("最优解");
+        cell.setCellStyle(style);
+
+        String tests[] = {
+                "jsp5"
+        };
+        List<Solver> solvers = new ArrayList<>();
+         solvers.add(new SBPSolver());
+
+      //  solvers.add(new LeftSolver());
+
+        for (int i = 0; i < solvers.size(); i++) {
+            Solver solver = solvers.get(i);
+            cell = row.createCell((short) 4 * i + 4);
+            cell.setCellValue(solver.name + "_INIT");
+            cell.setCellStyle(style);
+            cell = row.createCell((short) 4 * i + 5);
+            cell.setCellValue(solver.name + "_OPT");
+            cell.setCellStyle(style);
+            cell = row.createCell((short) 4 * i + 6);
+            cell.setCellValue(solver.name + "_TIME");
+            cell.setCellStyle(style);
+            cell = row.createCell((short) 4 * i + 7);
+            cell.setCellValue(solver.name + "_K");
+            cell.setCellStyle(style);
+        }
+        for (int i = 0; i < tests.length; i++) {
+            row = sheet.createRow((int) i + 1);
+            Problem p = Parser.parseInstance("./jsp/" + tests[i] + ".txt");
+            row.createCell((short) 0).setCellValue(tests[i]);
+            row.createCell((short) 1).setCellValue(p.getNumberOfJobs());
+            row.createCell((short) 2).setCellValue(p.getNumberOfMachines());
+            row.createCell((short) 3).setCellValue(p.getOptimalCost());
+            for (int j = 0; j < solvers.size(); j++) {
+                Solver solver = solvers.get(j);
+                solver.setP(p);
+                solver.excute();
+                row.createCell((short) 4 * j + 4).setCellValue(solver.initcost);
+                row.createCell((short) 4 * j + 5).setCellValue(solver.lastcost);
+                row.createCell((short) 4 * j + 6).setCellValue(solver.time);
+                row.createCell((short) 4 * j + 7).setCellValue(solver.K);
+                solver.print();
+            }
+            System.out.println(tests[i] + "  complete");
+        }
+        for(int i=0;i<TabuSearch.listK.size();i++){
+            System.out.println(TabuSearch.listK.get(i)+" "+TabuSearch.listCost.get(i));
+            row = sheet.createRow((int) i + 2);
+            row.createCell((short) 0).setCellValue(TabuSearch.listK.get(i));
+            row.createCell((short) 1).setCellValue(TabuSearch.listCost.get(i));
+        }
+        String pre = tests[0] + "_" + solvers.get(0).name + "_";
+        String outfile = "";
+        if (outfile.equals("")) {
+            int num = 1;
+            outfile = pre + num + ".xls";
+            File file = new File("./outtest/" + outfile);
+            while (file.exists()) {
+                num++;
+                outfile = pre + num + ".xls";
+                file = new File("./outtest/" + outfile);
+            }
+        }
+        try {
+            FileOutputStream fout = new FileOutputStream("./outtest/" + outfile);
+            wb.write(fout);
+            fout.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
     /*	public static void sbp(String filepath){
             Problem p = Parser

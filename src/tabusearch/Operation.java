@@ -124,9 +124,7 @@ public class Operation {
      * and their job and machine is equal.
      */
     public boolean equals(Operation o) {
-        return (getDuration() == o.getDuration())
-                && (getJob().equals(o.getJob()))
-                && (getMachine().equals(o.getMachine()));
+        return getId()==o.getId();
     }
 
     private int start;

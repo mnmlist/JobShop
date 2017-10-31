@@ -110,6 +110,8 @@ public class TabuSearch {
             s = s_bar;
 
             K++;
+            listK.add(K);
+            listCost.add(bestCost);
         }
 
         // System.out.println(K);
@@ -118,7 +120,8 @@ public class TabuSearch {
         bestSol.K = K;
         return bestSol;
     }
-
+    public static List<Integer> listK=new ArrayList<>();
+    public static List<Float> listCost=new ArrayList<>();
     public static Solution its(Solution p, int mode) {
         Solution s = p;
         float bestCost = s.getCost();
@@ -172,6 +175,8 @@ public class TabuSearch {
             s = s_bar;
 
             K++;
+            listK.add(K);
+            listCost.add(bestCost);
         }
 
         bestSol.K = K;
@@ -250,6 +255,9 @@ public class TabuSearch {
             s = s_bar;
 
             K++;
+            listK.add(K);
+            listCost.add(bestCost);
+
         }
         bestSol.K = K;
         return bestSol;
@@ -280,7 +288,7 @@ public class TabuSearch {
      */
     private static Move chooseRandomMoveFromSet(HashSet<Move> inversions) {
         int size = inversions.size();
-        int item = false ? new Random().nextInt(size) : 0;
+        int item = true ? new Random().nextInt(size) : 0;
         int i = 0;
         for (Move m : inversions) {
             if (i == item)

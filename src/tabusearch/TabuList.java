@@ -22,14 +22,18 @@ public class TabuList {
 		matrix = new int[p.getNumberOfOperations()][p.getNumberOfOperations()];
 
 		Random rand = new Random();
-		a = 2;
+		a=p.getNumberOfJobs();
+		//a = 2;
 		b = a + (p.getNumberOfJobs() + p.getNumberOfMachines()) / 3;
 		//setMin(rand.nextInt((b - a) + 1) + a);
-		setMin((a+b)/2);
+		//setMin((a+b)/2);
 		A = min + 6;
 		B = A + (p.getNumberOfJobs() + p.getNumberOfMachines()) / 3;
 		//setMax(rand.nextInt((B - A) + 1) + A);
-		setMax((A+B)/2);
+		//setMax((A+B)/2);
+
+		setMin(2*a/3);
+		setMax(2*a);
 	}
 
 	/************************************
@@ -94,9 +98,11 @@ public class TabuList {
 	private void randomlyChooseMinAndMax() {
 		Random rand = new Random();
 		//setMin(rand.nextInt((b - a) + 1) + a);
-		setMin((a+b)/2);
 		//setMax(rand.nextInt((B - A) + 1) + A);
-		setMax((A+B)/2);
+		//setMax((A+B)/2);
+		//setMin((a+b)/2);
+		setMin(2*a/3);
+		setMax(2*a);
 	}
 
 	/**
