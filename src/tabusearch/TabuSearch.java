@@ -288,7 +288,7 @@ public class TabuSearch {
      */
     private static Move chooseRandomMoveFromSet(HashSet<Move> inversions) {
         int size = inversions.size();
-        int item = true ? new Random().nextInt(size) : 0;
+        int item = false ? new Random().nextInt(size) : 0;
         int i = 0;
         for (Move m : inversions) {
             if (i == item)

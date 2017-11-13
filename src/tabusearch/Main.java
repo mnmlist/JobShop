@@ -2,6 +2,7 @@ package tabusearch;
 
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import show.ShowFrame;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,6 +31,7 @@ public class Main {
 /*		String filepath="./testinstances/orb02.txt";
         left(filepath);
 		sbp(filepath);*/
+       // new ShowFrame();
         outFile1();
     }
 
@@ -149,7 +151,7 @@ public class Main {
         cell.setCellStyle(style);
 
         String tests[] = {
-                "jsp5"
+                "jsp10"
         };
         List<Solver> solvers = new ArrayList<>();
          solvers.add(new SBPSolver());
