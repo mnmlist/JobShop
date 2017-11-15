@@ -151,7 +151,7 @@ public class Main {
         cell.setCellStyle(style);
 
         String tests[] = {
-                "jsp10"
+                "jsp5"
         };
         List<Solver> solvers = new ArrayList<>();
          solvers.add(new SBPSolver());
@@ -188,7 +188,9 @@ public class Main {
                 row.createCell((short) 4 * j + 5).setCellValue(solver.lastcost);
                 row.createCell((short) 4 * j + 6).setCellValue(solver.time);
                 row.createCell((short) 4 * j + 7).setCellValue(solver.K);
+                new ShowFrame(solver.last);
                 solver.print();
+
             }
             System.out.println(tests[i] + "  complete");
         }
@@ -198,25 +200,28 @@ public class Main {
             row.createCell((short) 0).setCellValue(TabuSearch.listK.get(i));
             row.createCell((short) 1).setCellValue(TabuSearch.listCost.get(i));
         }
-        String pre = tests[0] + "_" + solvers.get(0).name + "_";
-        String outfile = "";
-        if (outfile.equals("")) {
-            int num = 1;
-            outfile = pre + num + ".xls";
-            File file = new File("./outtest/" + outfile);
-            while (file.exists()) {
-                num++;
+        if(false){
+            String pre = tests[0] + "_" + solvers.get(0).name + "_";
+            String outfile = "";
+            if (outfile.equals("")) {
+                int num = 1;
                 outfile = pre + num + ".xls";
-                file = new File("./outtest/" + outfile);
+                File file = new File("./outtest/" + outfile);
+                while (file.exists()) {
+                    num++;
+                    outfile = pre + num + ".xls";
+                    file = new File("./outtest/" + outfile);
+                }
+            }
+            try {
+                FileOutputStream fout = new FileOutputStream("./outtest/" + outfile);
+                wb.write(fout);
+                fout.close();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        try {
-            FileOutputStream fout = new FileOutputStream("./outtest/" + outfile);
-            wb.write(fout);
-            fout.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
 
     }
 
