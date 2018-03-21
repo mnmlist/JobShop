@@ -9,7 +9,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class ShowFrame {
     public ShowFrame(Solution solution) {
@@ -71,13 +74,16 @@ class Gantt extends JPanel {
             int maxNumofJob = A[i].size();
             for (int j = 0; j < maxNumofJob; j++) {
                 Operation o = A[i].get(j);
+                String name = Tools.getZWName(o.getMachine());
+                if(j==0&&name.equals("")){
+                    continue;
+                }
                 float time = sol[i][j];
                 System.out.print(time+"  ");
                 int x = (int) (rt.x-time*wZW);
-                int y = (int) (lt.y + i * (hJZJ + 10) + hJZJ / 2 + (hJZJ + 10) / 2);
+                int y = (int) (lt.y + tranI(i) * (hJZJ + 10) + hJZJ / 2 + (hJZJ + 10) / 2);
                 int width = (int) (o.getDuration()*wZW);
                 int heigth = (int) hJZJ;
-                String name = Tools.getZWName(o.getMachine());
                 if (name.equals("")) {
                     g.setColor(Color.gray);
                     g.fillRect(x-width, y-heigth, width+1 , heigth );
@@ -94,6 +100,86 @@ class Gantt extends JPanel {
 
     }
 
+
+
+    private void drawAxis(Graphics2D g) {
+        setBackground(Color.white);
+        g.setColor(Color.BLACK);
+        int strx,stry;
+        String strname;
+
+        g.drawLine(lb.x, lb.y, lt.x, lt.y);
+        for (int i = 0; i < numOfJZJ; i++) {
+            int x = lt.x;
+            int y = (int) (lt.y + i * (hJZJ + 10) + (hJZJ + 10) / 2);
+            g.drawLine(x, y, x + 5, y);
+            String name = "F" + (i + 1);
+            g.drawString(name, x - 20, y);
+        }
+        strname="Aircraft";
+        strx=50;
+        stry=100;
+      //  g.rotate(90,getStringWidth(strname,g.getFont())/2,getStringHeight(strname,g.getFont())/2);
+        g.drawString(strname,50,50);
+      //  g.rotate(-90,getStringWidth(strname,g.getFont())/2,getStringHeight(strname,g.getFont())/2);
+
+        g.drawLine(lb.x, lb.y, rb.x, rb.y);
+        for (int i = 0; i <= endtime - starttime; i += blank) {
+            int x = (int) (lb.x + i * wZW);
+            int y = lb.y;
+            g.drawLine(x, y, x, y - 5);
+            String name = getTime(i);
+            g.drawString(name, x - 10, y + 15);
+        }
+        strname="Time";
+        strx=lb.x+(rb.x-lb.x)/2-getStringWidth(strname,g.getFont())/2;
+        stry=lb.y+30;
+        g.drawString(strname,strx,stry);
+    }
+    private int tranI(int num){
+        LinkedList<Operation>[] A=solution.getA();
+        int times[][]=new int[A.length][2];
+        for(int i=0;i<A.length;i++){
+            String mName=Tools.getZWName(A[i].getFirst().getMachine());
+            if(mName.equals("")){
+                times[i][0]=i;
+                times[i][1]=A[i].getFirst().getDuration();
+            }
+            else {
+                times[i][0]=i;
+                times[i][1]=0;
+            }
+        }
+        for(int i=0;i<times.length-1;i++){
+            for(int j=i+1;j<times.length;j++){
+
+                if(times[i][1]<=times[j][1]){
+                    int[] temp=times[i];
+                    times[i]=times[j];
+                    times[j]=temp;
+                }
+            }
+        }
+        int order=0;
+        for(int i=0;i<times.length;i++){
+            if(times[i][0]==num){
+                order=i;
+            }
+        }
+        return order;
+    }
+    private String getTime(int i) {
+        String time = "";
+        int hour = (i + starttime) / 60;
+        int min = (i + starttime) % 60;
+        if (min == 0) {
+            time = hour + ":" + min + "0";
+        } else {
+            time = hour + ":" + min;
+        }
+        return time;
+
+    }
     private static AffineTransform atf = new AffineTransform();
 
     private static FontRenderContext frc = new FontRenderContext(atf, true,
@@ -112,42 +198,6 @@ class Gantt extends JPanel {
             return 0;
         }
         return (int) font.getStringBounds(str, frc).getWidth();
-    }
-
-    private void drawAxis(Graphics2D g) {
-        setBackground(Color.white);
-        g.setColor(Color.BLACK);
-
-        g.drawLine(lb.x, lb.y, lt.x, lt.y);
-        for (int i = 0; i < numOfJZJ; i++) {
-            int x = lt.x;
-            int y = (int) (lt.y + i * (hJZJ + 10) + (hJZJ + 10) / 2);
-            g.drawLine(x, y, x + 5, y);
-            String name = "F" + (i + 1);
-            g.drawString(name, x - 30, y);
-        }
-
-        g.drawLine(lb.x, lb.y, rb.x, rb.y);
-        for (int i = 0; i <= endtime - starttime; i += blank) {
-            int x = (int) (lb.x + i * wZW);
-            int y = lb.y;
-            g.drawLine(x, y, x, y - 200);
-            String name = getTime(i);
-            g.drawString(name, x - 10, y + 15);
-        }
-    }
-
-    private String getTime(int i) {
-        String time = "";
-        int hour = (i + starttime) / 60;
-        int min = (i + starttime) % 60;
-        if (min == 0) {
-            time = hour + ":" + min + "0";
-        } else {
-            time = hour + ":" + min;
-        }
-        return time;
-
     }
 }
 
